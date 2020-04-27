@@ -30,8 +30,8 @@ python3 -m cppcheck-codequality --file=cppcheck_out.xml
 
 ## ToDo
 
-- [ ] Implement issue fingerprinting for GitLab
-- [ ] Logging instead of prints
+- [X] Implement issue fingerprinting for GitLab
+- [X] Logging instead of prints
 - [ ] Versioning
 - [ ] Ensure it works both as an importable module and as a script
 - [ ] Project's `pylint` badge
