@@ -4,6 +4,7 @@
 """
 import os
 import sys
+import math
 import logging
 from copy import deepcopy
 import argparse
@@ -178,18 +179,21 @@ def convert(fname_in: str, fname_out: str) -> bool:
             continue
 
         tmp_dict = dict(CODE_QUAL_ELEMENT)
-        tmp_dict["check_name"] = str(error["@id"])
-        tmp_dict["description"] = str(error["@msg"])
+        rule = error["@id"]
+        tmp_dict["check_name"] = rule
+        tmp_dict["description"] = error["@msg"]
 
         cats = list(_get_codeclimate_category(error["@severity"]).split("\n"))
         cats.append(error["@severity"])
         tmp_dict["categories"] = cats
 
-        tmp_dict["location"]["path"] = str(error["location"]["@file"])
-        tmp_dict["location"]["lines"]["begin"] = int(error["location"]["@line"])
-        tmp_dict["content"] = {"data": ""}
-
+        path = error["location"]["@file"]
+        tmp_dict["location"]["path"] = path
+        line = int(error["location"]["@line"])
+        tmp_dict["location"]["lines"]["begin"] = line
+        
         if "@cwe" in error:
+            tmp_dict["content"] = {"data": ""}
             cwe_id = error["@cwe"]
             tmp_dict["description"] = (
                 "[CWE-{}] ".format(cwe_id) + tmp_dict["description"]
@@ -199,20 +203,21 @@ def convert(fname_in: str, fname_out: str) -> bool:
             )
             tmp_dict["content"]["data"] += msg
 
-        # Fingerprint should be a hash of the error ID + the line of code
-        # that is generating the error.
-        # E.g. "wrongPrintfScanfArgNum" + "  printf("Hello World: %d %s", 42);"
-        # Refer to:
+        # GitLab requires the fingerprint field. Code Climate describes this as 
+        # being used to uniquely identify the issue, so users could "exclude it 
+        # from future analysis."
+        #
+        # The components of the fingerprint aren't well defined, but Code Climate
+        # has some examples here:
         # - https://github.com/codeclimate/codeclimate-duplication/blob/1c118a13b28752e82683b40d610e5b1ee8c41471/lib/cc/engine/analyzers/violation.rb#L83
         # - https://github.com/codeclimate/codeclimate-phpmd/blob/7d0aa6c652a2cbab23108552d3623e69f2a30282/tests/FingerprintTest.php
+        codeline = linecache.getline(path, line).strip()
+        # _Might_ remove the (rounded) line number if something else seems better, in the future.
+        fingerprint_str = path + ":" + str(int(math.ceil(line / 10.0)) * 10) + "-" + rule + "-" + codeline 
+        log.debug("Fingerprint string:\n  %s", fingerprint_str)
+        tmp_dict["fingerprint"] = hashlib.md5((fingerprint_str).encode('utf-8')).hexdigest()
 
-        # TODO: All this...
-        # finger_str = tmp_dict["check_name"]
-        str_code_line = linecache.getline(
-            tmp_dict["location"]["path"], tmp_dict["location"]["lines"]["begin"]
-        )
-        # hashlib.md5("whatever your string is".encode('utf-8')).hexdigest()
-
+        # Append this record
         tmp_dict_out.append(deepcopy(tmp_dict))
 
     log.debug("Writing output file: %s", fname_out)
@@ -227,7 +232,6 @@ if sys.version_info < (3, 5, 0):
     sys.exit(1)
 
 if __name__ == "__main__":
-
     _init_logging()
     log = logging.getLogger(__title__)
 
@@ -238,7 +242,7 @@ if __name__ == "__main__":
         print(__version__)
         sys.exit(0)
 
-    if not convert(fname_in=args.input_file, fname_out=args.output_file)
+    if not convert(fname_in=args.input_file, fname_out=args.output_file):
         sys.exit(1)
     else:
         sys.exit(0)
