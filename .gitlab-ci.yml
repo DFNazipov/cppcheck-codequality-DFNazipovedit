@@ -34,6 +34,6 @@ lint_python:
     - pylint_runner --version
     - pylint --version
   script:
-#    - cd ${CI_PROJECT_DIR}/src
+    - cd ${CI_PROJECT_DIR}/src
     - pylint_runner -v --rcfile ${CI_PROJECT_DIR}/.pylintrc
 
