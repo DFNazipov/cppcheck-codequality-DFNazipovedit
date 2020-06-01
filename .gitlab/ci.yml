@@ -36,8 +36,8 @@ lint_python:
     - pip install -I setuptools wheel six argparse pylint pylint_junit
     - pylint --version
   script:
-    - pylint --output-format=junit -v --rcfile ../.pylintrc src/
-      > ${CI_PROJECT_DIR}/pylint.junit.xml || ../.gitlab/pylint-exit-handler.sh $?
+    - pylint --output-format=junit -v --rcfile .pylintrc src/
+      > pylint.junit.xml || .gitlab/pylint-exit-handler.sh $?
   artifacts:
     when: always
     paths:
