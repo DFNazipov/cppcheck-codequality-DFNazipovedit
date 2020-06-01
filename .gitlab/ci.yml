@@ -36,8 +36,9 @@ lint_python:
     - pip install -I setuptools wheel six argparse pylint pylint2codeclimate
     - pylint --version
   script:
-    - cd ${CI_PROJECT_DIR}/src
-    - pylint -f pylint2codeclimate.CodeClimateReporter -v --rcfile ${CI_PROJECT_DIR}/.pylintrc *.py > codeclimate.json
+    - cd src
+    - pylint -f pylint2codeclimate.CodeClimateReporter -v --rcfile ../.pylintrc *.py
+      > ${CI_PROJECT_DIR}/codeclimate.json || ../.gitlab/pylint-exit-handler.sh $?
   artifacts:
     when: always
     paths: [codeclimate.json]
