@@ -1,0 +1,39 @@
+###############################################################################
+#
+###############################################################################
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+stages:
+  - lint
+  - build
+  - test
+  - docs
+
+###############################################################################
+# style and lint
+###############################################################################
+
+lint_python:
+  tags:
+    - docker
+  image: python:3.6
+  stage: lint
+  before_script:
+    - $PYTHON3 --version # Print Python 3 version for debugging
+    - $PYTHON3 -m pip install --user virtualenv
+    - $PYTHON3 -m virtualenv venv/
+    - source pyvenv/bin/activate
+    - pip install -I setuptools wheel six argparse pylint_runner
+    - pylint_runner --version
+    - pylint --version
+  script:
+    - cd ${CI_PROJECT_DIR}/src
+    - pylint_runner -v --rcfile ${CI_PROJECT_DIR}/.pylintrc
+
