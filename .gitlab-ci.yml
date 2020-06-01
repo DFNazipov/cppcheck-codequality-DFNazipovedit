@@ -29,11 +29,11 @@ lint_python:
     - python3 --version # Print Python 3 version for debugging
     - python3 -m pip install --user virtualenv
     - python3 -m virtualenv venv/
-    - source pyvenv/bin/activate
+    - source venv/bin/activate
     - pip install -I setuptools wheel six argparse pylint_runner
     - pylint_runner --version
     - pylint --version
   script:
-    - cd ${CI_PROJECT_DIR}/src
+#    - cd ${CI_PROJECT_DIR}/src
     - pylint_runner -v --rcfile ${CI_PROJECT_DIR}/.pylintrc
 
