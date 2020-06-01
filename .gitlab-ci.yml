@@ -26,9 +26,9 @@ lint_python:
   image: python:3.6
   stage: lint
   before_script:
-    - $PYTHON3 --version # Print Python 3 version for debugging
-    - $PYTHON3 -m pip install --user virtualenv
-    - $PYTHON3 -m virtualenv venv/
+    - python3 --version # Print Python 3 version for debugging
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
     - source pyvenv/bin/activate
     - pip install -I setuptools wheel six argparse pylint_runner
     - pylint_runner --version
