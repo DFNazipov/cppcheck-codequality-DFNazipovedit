@@ -1,9 +1,14 @@
 ###############################################################################
-#
+# GitLab CI YAML Documentation: https://docs.gitlab.com/ee/ci/yaml/
 ###############################################################################
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+
+default:
+  tags:
+    - docker
+  interruptible: true
 
 cache:
   paths:
@@ -21,8 +26,6 @@ stages:
 ###############################################################################
 
 lint_python:
-  tags:
-    - docker
   image: python:3.6
   stage: lint
   before_script:
