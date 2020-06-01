@@ -33,10 +33,12 @@ lint_python:
     - python3 -m pip install --user virtualenv
     - python3 -m virtualenv venv/
     - source venv/bin/activate
-    - pip install -I setuptools wheel six argparse pylint_runner
-    - pylint_runner --version
+    - pip install -I setuptools wheel six argparse pylint pylint2codeclimate
     - pylint --version
   script:
     - cd ${CI_PROJECT_DIR}/src
-    - pylint_runner -v --rcfile ${CI_PROJECT_DIR}/.pylintrc
+    - pylint -f pylint2codeclimate.CodeClimateReporter -v --rcfile ${CI_PROJECT_DIR}/.pylintrc *.py > codeclimate.json
+  artifacts:
+    when: always
+    paths: [codeclimate.json]
 
