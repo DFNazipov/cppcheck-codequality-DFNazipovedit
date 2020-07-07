@@ -1,3 +1,5 @@
+# NOTE: This file written for PyLint 2.5.2
+
 [MASTER]
 
 # Specify a configuration file.
@@ -16,7 +18,7 @@ persistent=yes
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=pylint_junit
+load-plugins=
 
 # Use multiple processes to speed up Pylint.
 jobs=1
@@ -61,7 +63,7 @@ disable=
     protected-access,
     too-few-public-methods,
     # handled by black
-    # format
+    format
 
 
 [REPORTS]
@@ -69,7 +71,7 @@ disable=
 # Set the output format. Available formats are text, parseable, colorized, msvs
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
-output-format=text
+output-format=colorized
 
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be
@@ -77,7 +79,7 @@ output-format=text
 files-output=no
 
 # Tells whether to display a full report or only the messages
-reports=yes
+reports=no
 
 # Python expression which should return a note less than 10 (10 is the highest
 # note). You have access to the variables errors warning, statement which
@@ -88,7 +90,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 
 # Template used to display messages. This is a python new-style format string
 # used to format the message information. See doc for all details
-#msg-template=
+# msg-template='{path}:{line}:{column}: {msg_id}: {msg} ({symbol})'
 
 
 [LOGGING]
@@ -122,7 +124,7 @@ ignore-imports=no
 [VARIABLES]
 
 # Tells whether we should check for unused import in __init__ files.
-init-import=no
+init-import=yes
 
 # A regular expression matching the name of dummy variables (i.e. expectedly
 # not used).
@@ -251,10 +253,10 @@ function-naming-style=snake_case
 module-naming-style=any
 class-naming-style=PascalCase
 method-naming-style=snake_case
-class-attribute-naming-style=camelCase
-attr-naming-style=camelCase
-argument-naming-style=camelCase
-variable-naming-style=camelCase
+class-attribute-naming-style=snake_case
+attr-naming-style=snake_case
+argument-naming-style=snake_case
+variable-naming-style=snake_case
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
@@ -262,7 +264,7 @@ no-docstring-rgx=__.*__
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.
-docstring-min-length=-1
+docstring-min-length=10
 
 # List of decorators that define properties, such as abc.abstractproperty.
 property-classes=abc.abstractproperty

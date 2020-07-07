@@ -1,5 +1,10 @@
 ###############################################################################
 # GitLab CI YAML Documentation: https://docs.gitlab.com/ee/ci/yaml/
+#
+# Using badge colors from https://shields.io
+# - Green:  #97ca00
+# - Yellow: #dfb317
+# - Red:    #e05d44
 ###############################################################################
 
 variables:
@@ -8,6 +13,7 @@ variables:
 default:
   tags:
     - docker
+  image: python:3.6
   interruptible: true
 
 cache:
@@ -26,22 +32,72 @@ stages:
 ###############################################################################
 
 lint_python:
-  image: python:3.6
   stage: lint
+  dependencies: []
   before_script:
-    - python3 --version # Print Python 3 version for debugging
     - python3 -m pip install --user virtualenv
     - python3 -m virtualenv venv/
     - source venv/bin/activate
-    - pip install -I setuptools wheel six argparse pylint pylint_junit
+    - pip install -U pylint anybadge
+    - pip install -r ./requirements.txt
+    - python3 --version # Print Python 3 version for debugging
     - pylint --version
+    - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
   script:
-    - pylint --output-format=junit -v --rcfile .pylintrc src/
-      > pylint.junit.xml || .gitlab/pylint-exit-handler.sh $?
+    - PYLINT_EC=0
+    - anybadge -l pylint -v 'fail' -c '#e05d44' -o -f badge.svg
+    - pylint --output-format=text -v src/ | tee pylint_out.txt || PYLINT_EC=$?
+    - PYLINT_SCORE=$(cat ./pylint_out.txt | grep -oP 'Your code has been rated at \K(\d+\.*\d+)')
+    - anybadge -v $PYLINT_SCORE -o -f badge.svg pylint
+    - echo "pylint_rating $PYLINT_SCORE" > metrics.txt
+    - .gitlab/pylint-exit-handler.sh $PYLINT_EC
   artifacts:
     when: always
     paths:
-      - pylint.junit.xml
+      - badge.svg
+      - pylint_out.txt
     reports:
-      junit: pylint.junit.xml
+      metrics: metrics.txt
+
+format_black:
+  stage: lint
+  dependencies: []
+  before_script:
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
+    - source venv/bin/activate
+    - pip install -U black anybadge
+    - python3 --version
+    - black --version
+    - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
+  script:
+    - anybadge -l formatting -v 'fail' -c '#e05d44' -o -f badge.svg
+    - black --check ./src
+    - anybadge -l formatting -v ' ok ' -c '#97ca00' -o -f badge.svg
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - badge.svg
+
+pytest:
+  stage: test
+  dependencies: []
+  before_script:
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
+    - source venv/bin/activate
+    - pip install -U pytest pytest-console-scripts pytest-cov anybadge
+    - python3 --version
+    - pytest --version
+    - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
+  script:
+    - pytest tests/
+  artifacts:
+    when: always
+    paths:
+      - pytest_out*
+      - coverage.xml
+    reports:
+      junit: pytest_out.xml.junit
 
