@@ -24,6 +24,18 @@ int foo(int *p, const Token *tok) {
   return a + 4;
 }
 
+int foo2(int *p, const Token *tok) {
+
+  // null ptr
+  while (tok);
+  tok = tok->next()
+
+  // portability
+  int a = p;
+  return a + 4;
+}
+
+
 int main(int argc, char ** argv)
 {
   uint8_t buf[10];
