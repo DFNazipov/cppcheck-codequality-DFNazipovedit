@@ -2,7 +2,7 @@
 # GitLab CI YAML Documentation: https://docs.gitlab.com/ee/ci/yaml/
 #
 # Using badge colors from https://shields.io
-# - Green:  #97ca00
+# - Green:  #44cc11
 # - Yellow: #dfb317
 # - Red:    #e05d44
 ###############################################################################
@@ -25,10 +25,10 @@ stages:
   - lint
   - build
   - test
-  - docs
+  - deploy
 
 ###############################################################################
-# style and lint
+# STYLE & LINT
 ###############################################################################
 
 lint_python:
@@ -38,19 +38,13 @@ lint_python:
     - python3 -m pip install --user virtualenv
     - python3 -m virtualenv venv/
     - source venv/bin/activate
-    - pip install -U pylint anybadge
-    - pip install -r ./requirements.txt
-    - python3 --version # Print Python 3 version for debugging
-    - pylint --version
-    - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
+    - pip install -U tox anybadge
   script:
-    - PYLINT_EC=0
     - anybadge -l pylint -v 'fail' -c '#e05d44' -o -f badge.svg
-    - pylint --output-format=text -v src/ | tee pylint_out.txt || PYLINT_EC=$?
+    - tox -e lint
     - PYLINT_SCORE=$(cat ./pylint_out.txt | grep -oP 'Your code has been rated at \K(\d+\.*\d+)')
     - anybadge -v $PYLINT_SCORE -o -f badge.svg pylint
     - echo "pylint_rating $PYLINT_SCORE" > metrics.txt
-    - .gitlab/pylint-exit-handler.sh $PYLINT_EC
   artifacts:
     when: always
     paths:
@@ -71,28 +65,49 @@ format_black:
     - black --version
     - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
   script:
-    - anybadge -l formatting -v 'fail' -c '#e05d44' -o -f badge.svg
+    - anybadge -l format -v 'fail' -c '#e05d44' -o -f badge.svg
     - black --check ./src
-    - anybadge -l formatting -v ' ok ' -c '#97ca00' -o -f badge.svg
+    - anybadge -l format -v ' ok ' -c '#44cc11' -o -f badge.svg
   allow_failure: true
   artifacts:
     when: always
     paths:
       - badge.svg
 
-pytest:
-  stage: test
+###############################################################################
+# BUILD
+###############################################################################
+
+sdist:
+  stage: build
   dependencies: []
+  needs: []
   before_script:
     - python3 -m pip install --user virtualenv
     - python3 -m virtualenv venv/
     - source venv/bin/activate
-    - pip install -U pytest pytest-console-scripts pytest-cov anybadge
-    - python3 --version
-    - pytest --version
-    - python3 -c "import anybadge; print(\"anybadge\", anybadge.__version__)"
+    - pip install --upgrade setuptools wheel
   script:
-    - pytest tests/
+    - python3 setup.py sdist --formats=zip
+  artifacts:
+    paths:
+      - dist/*
+
+
+###############################################################################
+# TEST
+###############################################################################
+
+pytest:
+  stage: test
+  image: python:3.6
+  before_script:
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
+    - source venv/bin/activate
+    - pip install -U tox
+  script:
+    - tox 
   artifacts:
     when: always
     paths:
@@ -101,3 +116,36 @@ pytest:
     reports:
       junit: pytest_out.xml.junit
 
+gitlab_artifact_report:
+  stage: test
+  before_script:
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
+    - source venv/bin/activate
+    - pip install ./dist/cppcheck_*.zip
+  script:
+    - cppcheck-codequality -i ./tests/cppcheck_simple.xml -o codequality.json
+  artifacts:
+    when: always
+    paths:
+      - codequality.json
+    reports:
+      codequality: codequality.json
+
+###############################################################################
+# DEPLOY
+###############################################################################
+
+pypi:
+  stage: deploy
+  dependencies: []
+  before_script:
+    - python3 -m pip install --user virtualenv
+    - python3 -m virtualenv venv/
+    - source venv/bin/activate
+    - python3 -m pip install --user --upgrade setuptools wheel twine
+  script:
+    - python3 setup.py sdist bdist_wheel
+    - python3 -m twine upload dist/* -u __token__ -p $PYPI_API_TOKEN
+  only:
+    - tags

@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <stdio>
 
+#include "Foo.h"
+
 void void_function_returns(uint8_t ** buf)
 {
   *buf = nullptr;
@@ -43,6 +45,8 @@ int main(int argc, char ** argv)
 
   printf("Hello World: %d %s", 42);
 
+  Foo f;
+  f.read();
   
   memcpy(cstr, "wow, this is really aweful", sizeof("whow, this is really aweful"));
   std::cout << cstr << "\n" << endl;
