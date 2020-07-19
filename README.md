@@ -1,14 +1,19 @@
-# README
+# cppcheck-codequality
 
-- [README](#readme)
-- [About](#about)
-  - [Stinkin' Badges](#stinkin-badges)
-  - [Usage](#usage)
-    - [To-Do](#to-do)
-  - [Contributing](#contributing)
-  - [Credits & Trademarks](#credits--trademarks)
+[![badge-pypi](https://img.shields.io/pypi/v/cppcheck-codequality.svg?logo=pypi)](https://pypi.python.org/pypi/cppcheck-codequality/)
 
-# About
+
+[![badge-pipeline](https://gitlab.com/ahogen/cppcheck-codequality/badges/master/pipeline.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+&nbsp;
+[![badge-coverage](https://gitlab.com/ahogen/cppcheck-codequality/badges/master/coverage.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+&nbsp;
+[![badge-pylint](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/master/raw/badge.svg?job=lint_python)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+&nbsp;
+[![badge-formatting](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/master/raw/badge.svg?job=format_black)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+&nbsp;
+[![badge-issues-cnt](https://img.shields.io/badge/dynamic/json?label=issues&query=statistics.counts.opened&url=https%3A%2F%2Fgitlab.com%2Fapi%2Fv4%2Fprojects%2F19114200%2Fissues_statistics%3Fscope%3Dall)](https://gitlab.com/ahogen/cppcheck-codequality/-/issues)
+
+## About
 
 I wanted reports from CppCheck to appear in GitLab Merge Requests as [Code
 Quality reports](https://docs.gitlab.com/ee/user/project/merge_requests/code_quality.html#implementing-a-custom-tool), 
@@ -16,13 +21,7 @@ which is a JSON file defined by the Code Climate team/service.
 
 That's all this does: convert CppCheck XML to Code Climate JSON.
 
-## Stinkin' Badges
-
-TODO: Coming soon...
-
-*Reference: ["The Treasure of the Sierra Madre"](https://en.wikipedia.org/wiki/Stinking_badges)*
-
-## Usage
+### Usage
 
 CppCheck already has a script to convert its XML report to HTML for easy
 human reading. See "Chapter 11 HTML Report" in the [CppCheck Manual v?.?](http://cppcheck.sourceforge.net/manual.pdf)
@@ -34,30 +33,28 @@ usage is as follows:
 # Generate CppCheck report as XML
 cppcheck --xml --enable=warning,style,performance ./my_src_dir/ 2> cppcheck_out.xml
 # Convert to a Code Climate JSON report
-python3 -m cppcheck-codequality --file=cppcheck_out.xml
+python3 -m cppcheck-codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
 ```
 
-### To-Do
+Now, in your GitLab CI script, [upload this file](https://docs.gitlab.com/ee/ci/pipelines/job_artifacts.html#artifactsreportscodequality) 
+as a Code Quality report.
 
+```yaml
+my-code-quality:
+  script:
+    - [...]
+  artifacts:
+    reports:
+      codequality: cppcheck.json
+```
 
-* [X] Implement issue fingerprinting for GitLab
-* [X] Logging instead of prints
-* [ ] Versioning
-* [ ] Ensure it works both as an importable module and as a script
-* [X] Project's `pylint` badge
-* [ ] Generate a badge with https://shields.io/ colors using [anybadge](https://pypi.org/project/anybadge/)
-* [ ] Figure out PyPi packaging
-* [ ] Generate Sphinx docs
-* [X] Add license
-* [ ] Add contributor agreement
-
-## Contributing
+### Contributing
 
 * Sign the contributor agreement (coming soon)
 * Format with [black](https://pypi.org/project/black/)
 * Check with [pylint](https://pypi.org/project/pylint/)
 
-## Credits & Trademarks
+### Credits & Trademarks
 
 CppCheck is an open-source project with a GPL v3.0 license.
 * http://cppcheck.sourceforge.net

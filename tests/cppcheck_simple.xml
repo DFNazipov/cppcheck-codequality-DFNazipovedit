@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="1.82"/>
+    <errors>
+        <error id="invalidPrintfArgType_sint" severity="warning" msg="%lld in format string (no. 1) requires &apos;long long&apos; but the argument type is &apos;signed int&apos;." verbose="%lld in format string (no. 1) requires &apos;long long&apos; but the argument type is &apos;signed int&apos;." cwe="686">
+            <location file0="tests/cpp_src/Foo.cpp" file="tests/cpp_src/Foo.h" line="19"/>
+        </error>
+        <error id="noConstructor" severity="style" msg="The class &apos;Foo&apos; does not have a constructor." verbose="The class &apos;Foo&apos; does not have a constructor although it has private member variables. Member variables of builtin types are left uninitialized when the class is instantiated. That may cause bugs or undefined behavior." cwe="398">
+            <location file0="tests/cpp_src/Foo.cpp" file="tests/cpp_src/Foo.h" line="3"/>
+        </error>
+        <error id="uselessAssignmentPtrArg" severity="warning" msg="Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?" verbose="Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?" cwe="398">
+            <location file="tests/cpp_src/bad_code_1.cpp" line="22"/>
+        </error>
+        <error id="uselessAssignmentPtrArg" severity="warning" msg="Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?" verbose="Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?" cwe="398">
+            <location file="tests/cpp_src/bad_code_1.cpp" line="33"/>
+        </error>
+        <error id="invalidPrintfArgType_sint" severity="warning" msg="%lld in format string (no. 1) requires &apos;long long&apos; but the argument type is &apos;signed int&apos;." verbose="%lld in format string (no. 1) requires &apos;long long&apos; but the argument type is &apos;signed int&apos;." cwe="686">
+            <location file0="tests/cpp_src/bad_code_1.cpp" file="tests/cpp_src/Foo.h" line="19"/>
+        </error>
+        <error id="wrongPrintfScanfArgNum" severity="error" msg="printf format string requires 2 parameters but only 1 is given." verbose="printf format string requires 2 parameters but only 1 is given." cwe="685">
+            <location file="tests/cpp_src/bad_code_1.cpp" line="46"/>
+        </error>
+        <error id="arrayIndexOutOfBounds" severity="error" msg="Array &apos;buf[10]&apos; accessed at index 10, which is out of bounds." verbose="Array &apos;buf[10]&apos; accessed at index 10, which is out of bounds." cwe="119">
+            <location file="tests/cpp_src/bad_code_1.cpp" line="57" info="Array index out of bounds"/>
+        </error>
+        <error id="noConstructor" severity="style" msg="The class &apos;Foo&apos; does not have a constructor." verbose="The class &apos;Foo&apos; does not have a constructor although it has private member variables. Member variables of builtin types are left uninitialized when the class is instantiated. That may cause bugs or undefined behavior." cwe="398">
+            <location file0="tests/cpp_src/bad_code_1.cpp" file="tests/cpp_src/Foo.h" line="3"/>
+        </error>
+        <error id="memleak" severity="error" msg="Memory leak: cstr" verbose="Memory leak: cstr" cwe="401">
+            <location file="tests/cpp_src/bad_code_1.cpp" line="64"/>
+        </error>
+    </errors>
+</results>

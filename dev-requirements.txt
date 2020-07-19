@@ -1,0 +1,8 @@
+tox-battery
+anybadge
+black
+pylint
+pylint-exit
+pytest
+pytest-cov
+pytest-console-scripts
