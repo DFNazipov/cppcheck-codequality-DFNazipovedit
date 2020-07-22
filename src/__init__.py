@@ -106,14 +106,14 @@ def _get_line_from_file(filename: str, line_number: int) -> str:
     
     Args:
         filename (str): Name of file to open and read line from
-        line_number (int): Number of the line to extract. Lines are 0-indexed
+        line_number (int): Number of the line to extract. Line number starts at 1.
 
     Returns:
         str: Contents of the specified line.
     """
-    with open(filename, mode="rt", errors="backslashreplace") as f:
-        for i, line in enumerate(f):
-            if i == line_number:
+    with open(filename, mode="rt", errors="backslashreplace") as fin:
+        for i, line in enumerate(fin):
+            if i == (line_number - 1):
                 return line
 
     log.warning(
@@ -208,10 +208,10 @@ def __convert(xml_input) -> str:
                     error["location"][i]["@line"]
                 )
 
-                c = 0
+                extra_col = 0
                 if "@column" in error["location"][i]:
-                    c = int(error["location"][i]["@column"])
-                loc_other["positions"]["begin"]["column"] = c
+                    extra_col = int(error["location"][i]["@column"])
+                loc_other["positions"]["begin"]["column"] = extra_col
 
                 if "other_locations" not in tmp_dict:
                     tmp_dict["other_locations"] = []
@@ -247,7 +247,9 @@ def __convert(xml_input) -> str:
         # has some examples here:
         # https://github.com/codeclimate/codeclimate-duplication/blob/1c118a13b28752e82683b40d610e5b1ee8c41471/lib/cc/engine/analyzers/violation.rb#L83
         # https://github.com/codeclimate/codeclimate-phpmd/blob/7d0aa6c652a2cbab23108552d3623e69f2a30282/tests/FingerprintTest.php
+
         codeline = _get_line_from_file(path, line).strip()
+
         # _Might_ remove the (rounded) line number if something else seems better, in the future.
         fingerprint_str = (
             path
@@ -296,7 +298,6 @@ def __get_args() -> argparse.Namespace:
         metavar="INPUT_XML_FILE",
         dest="input_file",
         type=str,
-        # default="STDIN",
         default="cppcheck.xml",
         help="the cppcheck XML output file to read defects from (default: %(default)s)",
     )
