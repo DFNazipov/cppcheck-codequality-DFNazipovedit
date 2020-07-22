@@ -21,6 +21,10 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://gitlab.com/ahogen/cppcheck-codequality",
+    project_urls={
+        "Source": "https://gitlab.com/ahogen/cppcheck-codequality",
+        "Tracker": "https://gitlab.com/ahogen/cppcheck-codequality/-/issues"
+    },
     setup_requires=["setuptools_scm"],
     use_scm_version={
         "local_scheme": "no-local-version",

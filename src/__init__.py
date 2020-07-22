@@ -29,8 +29,6 @@ from copy import deepcopy
 import json
 import hashlib
 
-import linecache
-
 # Non-system
 # import anybadge
 import xmltodict
@@ -83,28 +81,48 @@ def convert_file(fname_in: str, fname_out: str) -> bool:
     fin = None
     json_out = ""
 
-    try:
-        if isinstance(fname_in, str):
-            log.debug("Reading input file: %s", os.path.abspath(fname_in))
-            fin = open(fname_in, mode="r")
+    log.debug("Reading input file: %s", os.path.abspath(fname_in))
 
-        ## STDIN used when running as a script from command line. Not intended for
-        ## use when being used as a library.
-        # else:
-        #     log.debug("Reading from STDIN")
-        #     fin = fname
-
+    with open(fname_in, mode="r") as fin:
         json_out = __convert(fin.read())
-    finally:
-        if fin is not sys.stdin:
-            log.debug("Closing input file")
-            fin.close()
 
     log.debug("Writing output file: %s", fname_out)
     with open(fname_out, "w") as f_out:
         f_out.write(json_out)
 
     return True
+
+
+def _get_line_from_file(filename: str, line_number: int) -> str:
+    """Return a specific line in a file as a string.
+
+    I've found that linecache.getline() will end up raising a UnicodeDecodeError
+    if the source file we're opening has non-UTF-8 characters in it. So, here,
+    we're explicitly escaping those bad characters.
+
+    Side note, it seems CppCheck v2.0+ will generate a 'syntaxError' for
+    "unhandled characters", so you could find these issues with your source code
+    more easily.
+    
+    Args:
+        filename (str): Name of file to open and read line from
+        line_number (int): Number of the line to extract. Lines are 0-indexed
+
+    Returns:
+        str: Contents of the specified line.
+    """
+    with open(filename, mode="rt", errors="backslashreplace") as f:
+        for i, line in enumerate(f):
+            if i == line_number:
+                return line
+
+    log.warning(
+        "Not enough lines in file. Attempted to read line %d from '%s'",
+        line_number,
+        filename,
+    )
+    # To keep going, let's just make a string out of the file & line number
+    return str(filename) + str(line_number)
 
 
 def __convert(xml_input) -> str:
@@ -179,7 +197,9 @@ def __convert(xml_input) -> str:
                 path = error["location"][0]["@file"]
 
             line = int(error["location"][0]["@line"])
-            column = int(error["location"][0]["@column"])
+            column = 0
+            if "@column" in error["location"][0]:
+                column = int(error["location"][0]["@column"])
 
             for i in range(1, len(error["location"])):
                 loc_other = dict(CODE_QUAL_ELEMENT["location"])
@@ -187,9 +207,12 @@ def __convert(xml_input) -> str:
                 loc_other["positions"]["begin"]["line"] = int(
                     error["location"][i]["@line"]
                 )
-                loc_other["positions"]["begin"]["column"] = int(
-                    error["location"][i]["@column"]
-                )
+
+                c = 0
+                if "@column" in error["location"][i]:
+                    c = int(error["location"][i]["@column"])
+                loc_other["positions"]["begin"]["column"] = c
+
                 if "other_locations" not in tmp_dict:
                     tmp_dict["other_locations"] = []
                 tmp_dict["other_locations"].append(deepcopy(loc_other))
@@ -197,10 +220,9 @@ def __convert(xml_input) -> str:
             path = error["location"]["@file"]
             line = int(error["location"]["@line"])
 
+            column = 0
             if "@column" in error["location"]:
                 column = int(error["location"]["@column"])
-            else:
-                column = 0
 
         tmp_dict["location"]["path"] = path
         tmp_dict["location"]["positions"]["begin"]["line"] = line
@@ -225,7 +247,7 @@ def __convert(xml_input) -> str:
         # has some examples here:
         # https://github.com/codeclimate/codeclimate-duplication/blob/1c118a13b28752e82683b40d610e5b1ee8c41471/lib/cc/engine/analyzers/violation.rb#L83
         # https://github.com/codeclimate/codeclimate-phpmd/blob/7d0aa6c652a2cbab23108552d3623e69f2a30282/tests/FingerprintTest.php
-        codeline = linecache.getline(path, line).strip()
+        codeline = _get_line_from_file(path, line).strip()
         # _Might_ remove the (rounded) line number if something else seems better, in the future.
         fingerprint_str = (
             path
@@ -236,7 +258,7 @@ def __convert(xml_input) -> str:
             + "-"
             + codeline
         )
-        log.debug("Fingerprint string:\n  %s", fingerprint_str)
+        log.debug("Fingerprint string: '%s'", fingerprint_str)
         tmp_dict["fingerprint"] = hashlib.md5(
             (fingerprint_str).encode("utf-8")
         ).hexdigest()
@@ -275,7 +297,7 @@ def __get_args() -> argparse.Namespace:
         dest="input_file",
         type=str,
         # default="STDIN",
-        default="./",
+        default="cppcheck.xml",
         help="the cppcheck XML output file to read defects from (default: %(default)s)",
     )
 

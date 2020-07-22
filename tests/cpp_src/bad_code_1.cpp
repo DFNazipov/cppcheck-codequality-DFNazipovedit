@@ -3,6 +3,9 @@
 
 #include "Foo.h"
 
+// The below line has a non-ASCII character
+// ☠️
+
 void void_function_returns(uint8_t ** buf)
 {
   *buf = nullptr;
