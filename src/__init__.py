@@ -111,13 +111,17 @@ def _get_line_from_file(filename: str, line_number: int) -> str:
     Returns:
         str: Contents of the specified line.
     """
+    max_line_cnt = 0
     with open(filename, mode="rt", errors="backslashreplace") as fin:
         for i, line in enumerate(fin):
-            if i == (line_number - 1):
+            if (i + 1) == line_number:
+                # log.debug("Extracted line %s:%d", filename, line_number)
                 return line
+            max_line_cnt += 1
 
     log.warning(
-        "Not enough lines in file. Attempted to read line %d from '%s'",
+        "Only %d lines in file. Can't read line %d from '%s'",
+        max_line_cnt,
         line_number,
         filename,
     )
@@ -192,10 +196,11 @@ def __convert(xml_input) -> str:
         column = -1
         if isinstance(error["location"], list):
             if "@file0" in error["location"][0]:
-                path = error["location"][0]["@file0"]
-            else:
-                path = error["location"][0]["@file"]
+                tmp_dict["description"] = "Also see source file: {}\n\n{}".format(
+                    error["location"][0]["@file0"], tmp_dict["description"]
+                )
 
+            path = error["location"][0]["@file"]
             line = int(error["location"][0]["@line"])
             column = 0
             if "@column" in error["location"][0]:
@@ -217,6 +222,11 @@ def __convert(xml_input) -> str:
                     tmp_dict["other_locations"] = []
                 tmp_dict["other_locations"].append(deepcopy(loc_other))
         else:
+            if "@file0" in error["location"]:
+                tmp_dict["description"] = "Also see source file: {}\n\n{}".format(
+                    error["location"]["@file0"], tmp_dict["description"]
+                )
+
             path = error["location"]["@file"]
             line = int(error["location"]["@line"])
 
@@ -353,7 +363,7 @@ def main() -> int:
     m_log = logging.getLogger(__name__)
 
     args = __get_args()
-    m_log.setLevel(args.loglevel.upper())
+    logging.getLogger().setLevel(args.loglevel.upper())
 
     if args.print_version:
         print(__version__)
