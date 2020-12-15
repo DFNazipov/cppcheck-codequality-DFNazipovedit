@@ -13,7 +13,8 @@ pytest_plugins = "console-scripts"
 CPPCHECK_XML_ERRORS_START = r"""<?xml version="1.0" encoding="UTF-8"?><results version="2"><cppcheck version="1.90"/><errors>"""
 CPPCHECK_XML_ERRORS_END = r"""</errors></results>"""
 
-# @pytest.mark.script_launch_mode('subprocess')
+
+@pytest.mark.script_launch_mode("subprocess")
 def test_cli_opts(script_runner):
     ret = script_runner.run("cppcheck-codequality", "-h")
     assert ret.success
@@ -69,7 +70,7 @@ def test_convert_severity_warning(caplog):
     assert out["check_name"] == "uninitMemberVar"
     assert "CWE" in out["description"]
     assert out["categories"][0] == "Bug Risk"
-    assert out["categories"][1] == "warning"
+    assert out["severity"] == "major"
     assert out["location"]["path"] == "tests/cpp_src/bad_code_1.cpp"
     assert out["location"]["positions"]["begin"]["line"] == 50
     assert out["location"]["positions"]["begin"]["column"] == 5
@@ -89,7 +90,7 @@ def test_convert_severity_error(caplog):
     assert len(json_out) == 1
     out = json_out[0]
     assert out["categories"][0] == "Bug Risk"
-    assert out["categories"][1] == "error"
+    assert out["severity"] == "critical"
 
     print("Captured log:\n", caplog.text, flush=True)
     assert "WARNING" not in caplog.text
@@ -105,7 +106,7 @@ def test_convert_no_cwe(caplog):
     assert len(json_out) == 1
     out = json_out[0]
     assert out["categories"][0] == "Bug Risk"
-    assert out["categories"][1] == "error"
+    assert out["severity"] == "critical"
 
     print("Captured log:\n", caplog.text, flush=True)
     assert "WARNING" not in caplog.text
@@ -120,8 +121,8 @@ def test_convert_multiple_errors(caplog):
 
     json_out = json.loads(uut.__convert(xml_in))
     assert len(json_out) == 2
-    assert json_out[0]["categories"][1] == "information"
-    assert json_out[1]["categories"][1] == "warning"
+    assert json_out[0]["severity"] == "info"
+    assert json_out[1]["severity"] == "major"
 
     print("Captured log:\n", caplog.text, flush=True)
     assert "WARNING" not in caplog.text
@@ -184,61 +185,63 @@ def test_convert_no_loc_column(caplog):
 
 
 def test_source_line_extractor_good(caplog):
-  xml_in = CPPCHECK_XML_ERRORS_START
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file="tests/cpp_src/four_lines.c" line="1" column="0" />'
-  xml_in += r'</error>'
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file="tests/cpp_src/four_lines.c" line="2" column="0" />'
-  xml_in += r'</error>'
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file="tests/cpp_src/four_lines.c" line="3" column="0" />'
-  xml_in += r'</error>'
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file="tests/cpp_src/four_lines.c" line="4" column="0" />'
-  xml_in += r'</error>'
-  xml_in += CPPCHECK_XML_ERRORS_END
+    xml_in = CPPCHECK_XML_ERRORS_START
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file="tests/cpp_src/four_lines.c" line="1" column="0" />'
+    xml_in += r"</error>"
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file="tests/cpp_src/four_lines.c" line="2" column="0" />'
+    xml_in += r"</error>"
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file="tests/cpp_src/four_lines.c" line="3" column="0" />'
+    xml_in += r"</error>"
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file="tests/cpp_src/four_lines.c" line="4" column="0" />'
+    xml_in += r"</error>"
+    xml_in += CPPCHECK_XML_ERRORS_END
 
-  with caplog.at_level(logging.WARNING):
-    json_out = json.loads(uut.__convert(xml_in))
+    with caplog.at_level(logging.WARNING):
+        json_out = json.loads(uut.__convert(xml_in))
 
-  print("Captured log:\n", caplog.text, flush=True)
-  assert "WARNING" not in caplog.text
-  assert "ERROR" not in caplog.text
+    print("Captured log:\n", caplog.text, flush=True)
+    assert "WARNING" not in caplog.text
+    assert "ERROR" not in caplog.text
+
 
 def test_source_line_extractor_longer_than_file(caplog):
-  """If code has included other source, then the line number CppCheck generates
-  will be larger than the actual number of lines in the original source file.
+    """If code has included other source, then the line number CppCheck generates
+    will be larger than the actual number of lines in the original source file.
 
-  We just need to raise a warning and move on...
-  """
-  xml_in = CPPCHECK_XML_ERRORS_START
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file="tests/cpp_src/four_lines.c" line="5" column="0" />'
-  xml_in += r'</error>'
-  xml_in += CPPCHECK_XML_ERRORS_END
+    We just need to raise a warning and move on...
+    """
+    xml_in = CPPCHECK_XML_ERRORS_START
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file="tests/cpp_src/four_lines.c" line="5" column="0" />'
+    xml_in += r"</error>"
+    xml_in += CPPCHECK_XML_ERRORS_END
 
-  with caplog.at_level(logging.WARNING):
-    json_out = json.loads(uut.__convert(xml_in))
+    with caplog.at_level(logging.WARNING):
+        json_out = json.loads(uut.__convert(xml_in))
 
-  print("Captured log:\n", caplog.text, flush=True)
-  assert "WARNING" in caplog.text
-  assert "ERROR" not in caplog.text
+    print("Captured log:\n", caplog.text, flush=True)
+    assert "WARNING" in caplog.text
+    assert "ERROR" not in caplog.text
+
 
 def test_source_line_extractor_file0(caplog):
-  xml_in = CPPCHECK_XML_ERRORS_START
-  xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
-  xml_in += r'<location file0="tests/cpp_src/four_lines.c" file="tests/cpp_src/Foo.h" line="15" column="0" />'
-  xml_in += r'<location file0="tests/cpp_src/four_lines.c" file="tests/cpp_src/Foo.h" line="17" column="0" />'
-  xml_in += r'</error>'
-  xml_in += CPPCHECK_XML_ERRORS_END
+    xml_in = CPPCHECK_XML_ERRORS_START
+    xml_in += r'<error id="id" severity="error" msg="msg" verbose="message">'
+    xml_in += r'<location file0="tests/cpp_src/four_lines.c" file="tests/cpp_src/Foo.h" line="15" column="0" />'
+    xml_in += r'<location file0="tests/cpp_src/four_lines.c" file="tests/cpp_src/Foo.h" line="17" column="0" />'
+    xml_in += r"</error>"
+    xml_in += CPPCHECK_XML_ERRORS_END
 
-  caplog.set_level(logging.DEBUG)
-  json_out = json.loads(uut.__convert(xml_in))
+    caplog.set_level(logging.DEBUG)
+    json_out = json.loads(uut.__convert(xml_in))
 
-  print("Captured log:\n", caplog.text, flush=True)
-  assert "WARNING" not in caplog.text
-  assert "ERROR" not in caplog.text
+    print("Captured log:\n", caplog.text, flush=True)
+    assert "WARNING" not in caplog.text
+    assert "ERROR" not in caplog.text
 
 
 def test_convert_file(caplog):

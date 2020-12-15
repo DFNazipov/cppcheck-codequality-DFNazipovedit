@@ -41,6 +41,7 @@ log = logging.getLogger(__name__)
 # Source: https://github.com/codeclimate/platform/blob/master/spec/analyzers/SPEC.md#data-types
 CODE_QUAL_ELEMENT = {
     "type": "issue",
+    "severity": "--GITLAB-REQUIREMENT--",
     "check_name": "--CODE-CLIMATE-REQUIREMENT--",
     "description": "--CODE-CLIMATE-REQUIREMENT--",
     "categories": "--CODE-CLIMATE-REQUIREMENT--",
@@ -67,12 +68,28 @@ def __get_codeclimate_category(cppcheck_severity: str) -> str:
     return map_severity_to_category[cppcheck_severity]
 
 
+def __get_codeclimate_severity(cppcheck_severity: str) -> str:
+    """Get Code Climate severity, from CppCheck severity string
+
+    CodeQuality: info, minor, major, critical, blocker
+    """
+    map_severity_to_severity = {
+        "error": "critical",
+        "warning": "major",
+        "style": "minor",
+        "performance": "minor",
+        "portability": "minor",
+        "information": "info",
+    }
+    return map_severity_to_severity[cppcheck_severity]
+
+
 def convert_file(fname_in: str, fname_out: str) -> bool:
     """Convert CppCheck XML file to GitLab-compatible "Code Quality" JSON report
 
-    Args:    
+    Args:
         fname_in (str): Input file path (CppCheck XML). Like 'cppcheck.xml'.
-        fname_out (str): Output file path (code quality JSON). Like 'cppcheck.json'. 
+        fname_out (str): Output file path (code quality JSON). Like 'cppcheck.json'.
 
     Returns:
         bool: True if the conversion was successful.
@@ -103,7 +120,7 @@ def _get_line_from_file(filename: str, line_number: int) -> str:
     Side note, it seems CppCheck v2.0+ will generate a 'syntaxError' for
     "unhandled characters", so you could find these issues with your source code
     more easily.
-    
+
     Args:
         filename (str): Name of file to open and read line from
         line_number (int): Number of the line to extract. Line number starts at 1.
@@ -134,14 +151,14 @@ def __convert(xml_input) -> str:
 
     Note:
         There isn't a great 1:1 conversion from CppCheck's "severity" level, to
-        the Code Climate's "categories." To prevent information loss, the 
+        the Code Climate's "categories." To prevent information loss, the
         original CppCheck severity is appended to the category list.
 
-        In the future, maybe this conversion can be made using CppCheck's "id" 
+        In the future, maybe this conversion can be made using CppCheck's "id"
         or check name.
 
     Args:
-        fname_in (str): Filename of the XML from CppCheck 
+        fname_in (str): Filename of the XML from CppCheck
         fname_out (str): Filename to write the JSON output
 
     Returns:
@@ -185,11 +202,11 @@ def __convert(xml_input) -> str:
         tmp_dict = dict(CODE_QUAL_ELEMENT)
         rule = error["@id"]
         tmp_dict["check_name"] = rule
+        tmp_dict["categories"] = list(
+            __get_codeclimate_category(error["@severity"]).split("\n")
+        )
+        tmp_dict["severity"] = __get_codeclimate_severity(error["@severity"])
         tmp_dict["description"] = error["@msg"]
-
-        cats = list(__get_codeclimate_category(error["@severity"]).split("\n"))
-        cats.append(error["@severity"])
-        tmp_dict["categories"] = cats
 
         path = ""
         line = -1
@@ -238,16 +255,28 @@ def __convert(xml_input) -> str:
         tmp_dict["location"]["positions"]["begin"]["line"] = line
         tmp_dict["location"]["positions"]["begin"]["column"] = column
 
+        tmp_dict["content"] = {"body": ""}
+
+        # REMOVING the below lines, because reports with many issues can be
+        # difficult for GitLab to parse. Maybe we'll make this a CLI arg in the
+        # future so users can get verbose messages if they want them?
+        # if "@verbose" in error:
+        #    # Sometimes CppCheck will put the same message in @msg and @verbose
+        #    # fields. Don't bloat the JSON report with redundant info.
+        #    if error["@verbose"] != tmp_dict["description"]:
+        #        tmp_dict["content"]["body"] = error["@verbose"]
+
         if "@cwe" in error:
-            tmp_dict["content"] = {"data": ""}
             cwe_id = error["@cwe"]
-            tmp_dict["description"] = (
-                "[CWE-{}] ".format(cwe_id) + tmp_dict["description"]
+            tmp_dict["description"] = "[cppcheck] {} (CWE-{})".format(
+                tmp_dict["description"], cwe_id
             )
+
+            # Append to Markdown-format content
             msg = "Refer to [CWE-{id}](https://cwe.mitre.org/data/definitions/{id}.html)".format(
                 id=cwe_id
             )
-            tmp_dict["content"]["data"] += msg
+            tmp_dict["content"]["body"] += msg
 
         # GitLab requires the fingerprint field. Code Climate describes this as
         # being used to uniquely identify the issue, so users could "exclude it
@@ -299,7 +328,8 @@ def __get_args() -> argparse.Namespace:
     """Parse CLI args with argparse"""
     # Make parser object
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
