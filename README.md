@@ -16,15 +16,29 @@
 ## About
 
 I wanted reports from CppCheck to appear in GitLab Merge Requests as [Code
-Quality reports](https://docs.gitlab.com/ee/user/project/merge_requests/code_quality.html#implementing-a-custom-tool), 
+Quality reports](https://docs.gitlab.com/ee/user/project/merge_requests/code_quality.html#implementing-a-custom-tool),
 which is a JSON file defined by the Code Climate team/service.
 
 That's all this does: convert CppCheck XML to Code Climate JSON.
 
 ### Usage
 
+Install with PIP (note the _underscore_ here):
+
+```bash
+python3 -m pip install -U cppcheck_codequality
+```
+
+It is primarily used as a console script. As such, ensure you have Python 3's "scripts" directory in your `PATH` variable.
+For example, on Linux, that might be `$HOME/.local/bin`.
+
+To test, try the `--help` or `--version` flags (note the _dash_ here, instead of underscore):
+```bash
+cppcheck-codequality --help
+```
+
 CppCheck already has a script to convert its XML report to HTML for easy
-human reading. See "Chapter 11 HTML Report" in the [CppCheck Manual v?.?](http://cppcheck.sourceforge.net/manual.pdf)
+human reading. See "Chapter 11 HTML Report" in the [CppCheck Manual](http://cppcheck.sourceforge.net/manual.pdf)
 
 This script follows that example and provides similar command-line options. So
 usage is as follows:
@@ -33,10 +47,15 @@ usage is as follows:
 # Generate CppCheck report as XML
 cppcheck --xml --enable=warning,style,performance ./my_src_dir/ 2> cppcheck_out.xml
 # Convert to a Code Climate JSON report
-python3 -m cppcheck-codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
+cppcheck-codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
+```
+OR, you could invoke the script directly, as a module, like this:
+```bash
+# Run as a module instead
+python3 -m cppcheck_codequality.__main__ --input-file=cppcheck_out.xml --output-file=cppcheck.json
 ```
 
-Now, in your GitLab CI script, [upload this file](https://docs.gitlab.com/ee/ci/pipelines/job_artifacts.html#artifactsreportscodequality) 
+Now, in your GitLab CI script, [upload this file](https://docs.gitlab.com/ee/ci/pipelines/job_artifacts.html#artifactsreportscodequality)
 as a Code Quality report.
 
 ```yaml
