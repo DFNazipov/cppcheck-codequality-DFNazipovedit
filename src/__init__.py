@@ -129,6 +129,9 @@ def _get_line_from_file(filename: str, line_number: int) -> str:
         str: Contents of the specified line.
     """
     max_line_cnt = 0
+    if line_number <= 0:
+        return str(filename) + "<the whole file>"
+
     with open(filename, mode="rt", errors="backslashreplace") as fin:
         for i, line in enumerate(fin):
             if (i + 1) == line_number:
