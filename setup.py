@@ -42,7 +42,7 @@ setup(
     ],
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#automatic-script-creation
     entry_points={
-        "console_scripts": ["cppcheck-codequality=cppcheck_codequality:main"],
+        "console_scripts": ["cppcheck-codequality=cppcheck_codequality.__main__:main"],
     },
     python_requires=">=3.6",
 )
