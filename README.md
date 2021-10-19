@@ -51,8 +51,8 @@ cppcheck-codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
 ```
 OR, you could invoke the script directly, as a module, like this:
 ```bash
-# Run as a module instead
-python3 -m cppcheck_codequality.__main__ --input-file=cppcheck_out.xml --output-file=cppcheck.json
+# Run as a module instead (note the underscore in the module name here)
+python -m cppcheck_codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
 ```
 
 Now, in your GitLab CI script, [upload this file](https://docs.gitlab.com/ee/ci/pipelines/job_artifacts.html#artifactsreportscodequality)

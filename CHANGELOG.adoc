@@ -1,0 +1,112 @@
+= `cppcheck-codequality` Changelog
+:toc:
+
+== Upcoming
+
+== v1.2.0 - 2021-10-19
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.2.0[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.2.0/[PyPi]
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/6[#6]]
+  Fix "run as module" usage by splitting the singular `\__init__.py` into `\__init__.py` and `\__main__.py`.
+* CI now tests against py36, py37, py38, py39
+* Added support for pointing to source code directories.
+* Remove CWE URL from content: body. 
+  I don't think it has been very useful over the last year. 
+  Not exposed in GitLab MRs and just makes the JSON file larger.
+* Log warning message if `ConfigurationNotChecked` rule (from CppCheck) is seen in the input XML.
+* Log number of issues written to output. 
+* Remove `[cppcheck]` prefix from JSON `description` field. Move to `check_name` field.
+** Was added in v1.1.0
+** It takes up space in GitLab MRs. Removing, so devs see more useful info.
+** Moved to `check_name` field, thinking if folks want to concatenate JSON reports
+   from https://gist.github.com/caryan/87bdadba4b6579ffed8a87d546364d72[other tools], 
+   it may be useful to debug what analysis tool generated the issue.
+
+== v1.1.2 - 2021-08-18
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.1.2[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.1.2/[PyPi]
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/merge_requests/11[!11]]
+  Fix crash when CppCheck points to line number 0 in a file.
+
+== v1.1.1 - 2021-02-17
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.1.1[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.1.1/[PyPi]
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/merge_requests/7[!7]]
+  Fix example in README
+
+== v1.1.0 - 2020-12-15
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.1.0[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.1.0/[PyPi]
+
+Improve JSON report output with severity field
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/3[#3]] 
+  Add 'severity' field.
+* Remove CppCheck's severity from the JSON 'categories' list
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/2[#2]] 
+  Add "[cppcheck]" prefix to issue message, to quickly identify the
+  tool which produced the warning. May put this in 'engine_name' field
+  in the future, but GitLab won't show that in MRs. So prefix the issue
+  message for now.
+
+== v1.0.3 - 2020-7-22
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.0.3[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.0.3/[PyPi]
+
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/merge_requests/5[!5]] 
+  Fix reading code line from wrong file, when issue has an array of file locations.
+
+== v1.0.2 - 2020-7-22
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.0.2[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.0.2/[PyPi]
+
+
+* [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/1[#1]] 
+  Fix off-by-one error in file line read call
+
+== v1.0.1 - 2020-7-21
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.0.1[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.0.1/[PyPi]
+
+Improve reliability and (code) consistency
+
+
+* Fixes issue where source code with bad (not UTF-8/ASCII) characters would
+  cause script failure.
+* Fixes issues where column number is missing in XML report.
+* Add a few more tests
+
+== v1.0.0 - 2020-7-19
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v1.0.0[tag]
+ +
+📦 https://pypi.org/project/cppcheck-codequality/1.0.0/[PyPi]
+
+Script working. PyPi packaging and CI pipeline set up.
+
+== v0.1.0-rc0 - 2020-7-7
+
+🏷️ https://gitlab.com/ahogen/cppcheck-codequality/-/tags/v0.1.0-rc0[tag]
+
+Initial mostly-working v0.1.0 (still in development)
+
+
+

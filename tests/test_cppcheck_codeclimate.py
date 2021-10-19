@@ -1,3 +1,5 @@
+import os
+import sys
 import pytest
 import json
 import logging
@@ -16,6 +18,12 @@ CPPCHECK_XML_ERRORS_END = r"""</errors></results>"""
 
 @pytest.mark.script_launch_mode("subprocess")
 def test_cli_opts(script_runner):
+
+    ret = script_runner.run(
+        os.path.abspath(sys.executable), "-m", "cppcheck_codequality", "-h"
+    )
+    assert ret.success
+
     ret = script_runner.run("cppcheck-codequality", "-h")
     assert ret.success
 
@@ -41,9 +49,26 @@ def test_cli_opts(script_runner):
     )
     assert ret.success
 
+    ret = script_runner.run(
+        "cppcheck-codequality",
+        "-i",
+        "./tests/cppcheck_simple_needs_base_dir.xml",
+        "-o",
+        "cppcheck.json",
+        "-b",
+        "./",
+        "-b",
+        "./tests",
+    )
+    assert ret.success
+
     ret = script_runner.run("cppcheck-codequality", "--version")
     assert ret.success
 
+def test_run_as_module():
+    import subprocess
+    ret = subprocess.run(["python", "-m", "cppcheck_codequality", "--version"], shell=True, check=True)
+    assert ret.returncode == 0
 
 def test_convert_no_messages(caplog):
     xml_in = CPPCHECK_XML_ERRORS_START + CPPCHECK_XML_ERRORS_END
@@ -67,7 +92,7 @@ def test_convert_severity_warning(caplog):
     assert len(json_out) == 1
     out = json_out[0]
     assert out["type"] == "issue"
-    assert out["check_name"] == "uninitMemberVar"
+    assert out["check_name"] == "cppcheck[uninitMemberVar]"
     assert "CWE" in out["description"]
     assert out["categories"][0] == "Bug Risk"
     assert out["severity"] == "major"
@@ -116,13 +141,15 @@ def test_convert_no_cwe(caplog):
 def test_convert_multiple_errors(caplog):
     xml_in = CPPCHECK_XML_ERRORS_START
     xml_in += r'<error id="uninitMemberVar" severity="information" msg="message" verbose="verbose message"> <location file="tests/cpp_src/bad_code_1.cpp" line="60" column="456"/></error>'
-    xml_in += r'<error id="uninitMemberVar" severity="warning" msg="message" verbose="verbose message"> <location file="tests/cpp_src/bad_code_1.cpp" line="68" column="9"/></error>'
+    xml_in += r'<error id="uselessAssignmentPtrArg" severity="warning" msg="message" verbose="verbose message"> <location file="tests/cpp_src/bad_code_1.cpp" line="68" column="9"/></error>'
     xml_in += CPPCHECK_XML_ERRORS_END
 
     json_out = json.loads(uut.__convert(xml_in))
     assert len(json_out) == 2
     assert json_out[0]["severity"] == "info"
+    assert json_out[0]["check_name"] == "cppcheck[uninitMemberVar]"
     assert json_out[1]["severity"] == "major"
+    assert json_out[1]["check_name"] == "cppcheck[uselessAssignmentPtrArg]"
 
     print("Captured log:\n", caplog.text, flush=True)
     assert "WARNING" not in caplog.text
@@ -209,8 +236,10 @@ def test_source_line_extractor_good(caplog):
 
 
 def test_source_line_extractor_longer_than_file(caplog):
-    """If code has included other source, then the line number CppCheck generates
-    will be larger than the actual number of lines in the original source file.
+    """If code has included other source (e.g. `#include "dont_do_this.c"`),
+    then the line number CppCheck generates will be larger than the actual
+    number of lines in the original source file, because we don't do pre-processing
+    like CppCheck does.
 
     We just need to raise a warning and move on...
     """
@@ -246,7 +275,12 @@ def test_source_line_extractor_file0(caplog):
 
 def test_convert_file(caplog):
 
-    assert uut.convert_file("tests/cppcheck_simple.xml", "cppcheck.json")
+    with pytest.raises(FileNotFoundError, match=r".* Missing a base directory.*"):
+        uut.convert_file("tests/cppcheck_simple_needs_base_dir.xml", "cppcheck.json")
+
+    assert uut.convert_file(
+        "tests/cppcheck_simple_needs_base_dir.xml", "cppcheck.json", ["tests"]
+    )
 
     is_file_actually_json = False
     try:
