@@ -93,7 +93,6 @@ sdist:
     paths:
       - dist/*
 
-
 ###############################################################################
 # TEST
 ###############################################################################
@@ -101,8 +100,13 @@ sdist:
 pytest:
   stage: test
   image: fkrull/multi-python:bionic
+  before_script:
+    - ${PYTHON3} -m venv ./.venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install -r dev-requirements.txt
   script:
-    - tox 
+    - tox -e ${TOXENV}
     - tox -e coverage
   coverage: /TOTAL.+?(\d+\%)/
   artifacts:
@@ -112,7 +116,19 @@ pytest:
       - coverage.xml
     reports:
       junit: ${CI_PROJECT_DIR}/*.xml.junit
-      cobertura: coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  parallel:
+    matrix:
+      - PYTHON3: python3.6
+        TOXENV: py36
+      - PYTHON3: python3.7
+        TOXENV: py37
+      - PYTHON3: python3.8
+        TOXENV: py38
+      - PYTHON3: python3.9
+        TOXENV: py39
 
 gitlab_artifact_report:
   stage: test
