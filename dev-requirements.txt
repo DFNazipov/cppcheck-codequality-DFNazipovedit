@@ -6,3 +6,4 @@ pylint-exit
 pytest
 pytest-cov
 pytest-console-scripts
+setuptools-scm

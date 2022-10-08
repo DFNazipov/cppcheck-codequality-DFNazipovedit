@@ -49,6 +49,7 @@ __pypackages__/
 # Environments
 .venv
 venv/
+.venv-*/
 
 # Generated during package build
 version.py
