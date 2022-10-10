@@ -23,6 +23,7 @@ SPDX-License-Identifier: MIT
 import os
 import math
 import logging
+import typing
 
 from copy import deepcopy
 import json
@@ -48,7 +49,7 @@ CODE_QUAL_ELEMENT = {
 }
 
 
-def __get_codeclimate_category(cppcheck_severity: str) -> str:
+def _get_codeclimate_category(cppcheck_severity: str) -> str:
     """Get Code Climate category, from CppCheck severity string
 
     CppCheck: error, warning, style, performance, portability, information
@@ -66,7 +67,7 @@ def __get_codeclimate_category(cppcheck_severity: str) -> str:
     return map_severity_to_category[cppcheck_severity]
 
 
-def __get_codeclimate_severity(cppcheck_severity: str) -> str:
+def _get_codeclimate_severity(cppcheck_severity: str) -> str:
     """Get Code Climate severity, from CppCheck severity string
 
     CodeQuality: info, minor, major, critical, blocker
@@ -82,7 +83,9 @@ def __get_codeclimate_severity(cppcheck_severity: str) -> str:
     return map_severity_to_severity[cppcheck_severity]
 
 
-def convert_file(fname_in: str, fname_out: str, base_dirs: list = None) -> int:
+def convert_file(
+    fname_in: str, fname_out: str, base_dirs: typing.Optional[list] = None
+) -> int:
     """Convert CppCheck XML file to GitLab-compatible "Code Quality" JSON report
 
     Args:
@@ -98,7 +101,8 @@ def convert_file(fname_in: str, fname_out: str, base_dirs: list = None) -> int:
           CppCheck issues processed.
     """
     fin = None
-    json_out = ""
+    json_out_str = ""
+    num_cq_issues_converted = 0
 
     fname_in = os.path.abspath(fname_in)
 
@@ -111,16 +115,20 @@ def convert_file(fname_in: str, fname_out: str, base_dirs: list = None) -> int:
 
     log.debug("Reading input file: %s", fname_in)
     with open(fname_in, mode="rt", encoding="utf-8", errors="backslashreplace") as fin:
-        json_out = __convert(fin.read(), base_dirs=base_dirs)
+        json_out_str, num_cq_issues_converted = _convert(
+            fin.read(), base_dirs=base_dirs
+        )
 
     log.debug("Writing output file: %s", fname_out)
     with open(fname_out, "w", encoding="utf-8") as f_out:
-        f_out.write(json_out)
+        f_out.write(json_out_str)
 
-    return len(json_out)
+    return num_cq_issues_converted
 
 
-def _get_line_from_file(filename: str, line_number: int, base_dirs: list) -> str:
+def _get_line_from_file(
+    filename: str, line_number: int, base_dirs: typing.Optional[typing.List[str]]
+) -> str:
     """Return a specific line in a file as a string.
 
     I've found that linecache.getline() will end up raising a UnicodeDecodeError
@@ -175,7 +183,9 @@ def _get_line_from_file(filename: str, line_number: int, base_dirs: list) -> str
     return "Can't read line {} from a {} line file".format(line_number, max_line_cnt)
 
 
-def __convert(xml_input, base_dirs: list = None) -> str:
+def _convert(
+    xml_input, base_dirs: typing.Optional[typing.List[str]] = None
+) -> typing.Tuple[str, int]:
     """Convert CppCheck XML to Code Climate JSON
 
     Note:
@@ -191,16 +201,18 @@ def __convert(xml_input, base_dirs: list = None) -> str:
         fname_out (str): Filename to write the JSON output
 
     Returns:
-        str: JSON conversion result.
+        Tuple, where the first element, a string, is the JSON conversion result
+        and the second element, an int, is the number of issues converted.
     """
 
     dict_in = xmltodict.parse(xml_input=xml_input)
 
     if len(dict_in) == 0:
         log.info("Empty file imported. Skipping...")
-        return "[ ]"
+        return ("[ ]", 0)
 
-    if dict_in["results"]["cppcheck"]["@version"] < "1.82":
+    cppcheck_ver_str = dict_in["results"]["cppcheck"]["@version"]
+    if cppcheck_ver_str < "1.82":
         log.warning("\nWARNING: This was tested against a newer version of CppCheck")
 
     dict_out = []
@@ -208,7 +220,7 @@ def __convert(xml_input, base_dirs: list = None) -> str:
     # Ensure this XML report has errors to convert
     if not isinstance(dict_in["results"]["errors"], dict):
         log.warning("No <errors> in XML file. Nothing to do.")
-        return json.dumps(dict_out)
+        return (json.dumps(dict_out), 0)
 
     if not isinstance(dict_in["results"]["errors"]["error"], list):
         dict_in["results"]["errors"]["error"] = list(
@@ -238,9 +250,9 @@ def __convert(xml_input, base_dirs: list = None) -> str:
             )
 
         tmp_dict["categories"] = list(
-            __get_codeclimate_category(error["@severity"]).split("\n")
+            _get_codeclimate_category(error["@severity"]).split("\n")
         )
-        tmp_dict["severity"] = __get_codeclimate_severity(error["@severity"])
+        tmp_dict["severity"] = _get_codeclimate_severity(error["@severity"])
         tmp_dict["description"] = error["@msg"]
 
         path = ""
@@ -311,16 +323,7 @@ def __convert(xml_input, base_dirs: list = None) -> str:
             filename=path, line_number=line, base_dirs=base_dirs
         ).strip()
 
-        # _Might_ remove the (rounded) line number if something else seems better, in the future.
-        fingerprint_str = (
-            path
-            + ":"
-            + str(int(math.ceil(line / 10.0)) * 10)
-            + "-"
-            + rule
-            + "-"
-            + codeline
-        )
+        fingerprint_str = "cppcheck-" + rule + "-" + path + "-" + codeline
         log.debug("Fingerprint string: '%s'", fingerprint_str)
         tmp_dict["fingerprint"] = hashlib.md5(
             (fingerprint_str).encode("utf-8")
@@ -331,7 +334,7 @@ def __convert(xml_input, base_dirs: list = None) -> str:
 
     if len(dict_out) == 0:
         log.warning("Result is empty")
-    return json.dumps(dict_out)
+    return (json.dumps(dict_out), len(dict_out))
 
 
 if __name__ == "__main__":

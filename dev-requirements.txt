@@ -1,4 +1,3 @@
-tox-battery
 anybadge
 black
 pylint

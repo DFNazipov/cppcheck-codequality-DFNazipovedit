@@ -23,17 +23,15 @@ setup(
     url="https://gitlab.com/ahogen/cppcheck-codequality",
     project_urls={
         "Source": "https://gitlab.com/ahogen/cppcheck-codequality",
-        "Tracker": "https://gitlab.com/ahogen/cppcheck-codequality/-/issues"
+        "Tracker": "https://gitlab.com/ahogen/cppcheck-codequality/-/issues",
     },
     setup_requires=["setuptools_scm"],
     use_scm_version={
         "local_scheme": "no-local-version",
-        "write_to": "src/version.py",
+        "write_to": "cppcheck_codequality/version.py",
         "write_to_template": "# pylint: disable=C0114\nVERSION = '{version}'",
     },
     install_requires=install_requires,
-    # https://docs.python.org/3/distutils/examples.html#pure-python-distribution-by-module
-    package_dir={"cppcheck_codequality": "src"},
     packages=["cppcheck_codequality"],
     classifiers=[
         "Programming Language :: Python :: 3",

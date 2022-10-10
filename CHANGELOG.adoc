@@ -4,6 +4,8 @@
 == Upcoming
 
 * Fix Gitlab CI syntax to use new `reports:coverage_report` key.
+* Remove line number from fingerprint input. [#7]
+* Fix issue count return from `convert_file`. [#8]
 
 == v1.2.0 - 2021-10-19
 
