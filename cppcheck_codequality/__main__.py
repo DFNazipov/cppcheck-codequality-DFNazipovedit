@@ -8,7 +8,7 @@ from . import convert_file
 from . import __version__
 
 
-def __init_logging(level, fname):
+def _init_logging(level, fname):
     """Setup root logger to log to console, when this is run as a script"""
     logging.getLogger().setLevel(level)
 
@@ -31,7 +31,7 @@ def __init_logging(level, fname):
         logging.getLogger("").addHandler(h_file)
 
 
-def __get_args() -> argparse.Namespace:
+def _get_args() -> argparse.Namespace:
     """Parse CLI args with argparse"""
     # Make parser object
     parser = argparse.ArgumentParser(
@@ -101,13 +101,13 @@ def __get_args() -> argparse.Namespace:
 def main() -> int:
     """Convert a CppCheck XML file to Code Climate JSON file, at the command line."""
 
-    if sys.version_info < (3, 5, 0):
-        sys.stderr.write("You need python 3.5 or later to run this script\n")
+    if sys.version_info < (3, 6, 0):
+        sys.stderr.write("You need python 3.6 or later to run this script\n")
         return 1
 
-    args = __get_args()
+    args = _get_args()
 
-    __init_logging(level=args.loglevel.upper(), fname=args.logfile)
+    _init_logging(level=args.loglevel.upper(), fname=args.logfile)
     m_log = logging.getLogger(__name__)
 
     if args.print_version:
