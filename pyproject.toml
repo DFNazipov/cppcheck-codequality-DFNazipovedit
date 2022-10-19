@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "cppcheck-codequality"
+version = "0.0.0"
+license = "MIT"
+authors = ["Alex Hogen <code.ahogen@outlook.com>"]
+description = "Convert a CppCheck XML report to a GitLab-compatible Code Quality JSON report."
+include = ["README.md", "CHANGELOG.adoc", "LICENSE"]
+readme = "README.md"
+homepage = "https://gitlab.com/ahogen/cppcheck-codequality"
+repository = "https://gitlab.com/ahogen/cppcheck-codequality"
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://gitlab.com/ahogen/cppcheck-codequality/-/issues"
+"Changelog" = "https://gitlab.com/ahogen/cppcheck-codequality/-/blob/main/CHANGELOG.adoc"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry.scripts]
+cppcheck-codequality = 'cppcheck_codequality.__main__:main'
+
+[tool.poetry.dependencies]
+python = ">=3.7.2,<=3.11"
+xmltodict = "^0.13.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.10.1"
+black = "^22.10.0"
+pylint = ">=2.10.0,<=2.13" # https://github.com/PyCQA/pylint/issues/7214
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.1.3"
+pytest-cov = "^4.0.0"
+pytest-console-scripts = "^1.3.1"
+# 'pytest-console-scripts' imports 'pkg_resources'
+# so we need to ensure SetupTools is installed.
+setuptools = ">=64.0.0"
+
+[tool.poetry.group.multienv.dependencies]
+tox = ">=3.24.0"
+
+[tool.poetry.group.ci.dependencies]
+anybadge = "^1.14.0"
+pylint-exit = "^1.2.0"
+pylint-gitlab = "^1.1.0"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
+metadata = false
