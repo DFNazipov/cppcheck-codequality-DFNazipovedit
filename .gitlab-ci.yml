@@ -46,25 +46,6 @@ stages:
   - test
   - deploy
 
-# setup:
-#   stage: prepare
-#   # image: $IMAGE
-#   dependencies: []
-#   needs: []
-#   script:
-#     - tox -e ${TOXENV}
-
-# parallel:
-#   matrix:
-#     - IMAGE: python:3.7
-#       TOXENV: py37
-#     - IMAGE: python:3.8
-#       TOXENV: py38
-#     - IMAGE: python:3.9
-#       TOXENV: py39
-#     - IMAGE: python:3.10
-#       TOXENV: py310
-
 ###############################################################################
 # STYLE & LINT
 ###############################################################################
@@ -119,13 +100,16 @@ format_black:
 # BUILD
 ###############################################################################
 
-# sdist:
-#   stage: build
-#   script:
-#     - python setup.py sdist --formats=zip
-#   artifacts:
-#     paths:
-#       - dist/*
+build:
+  stage: build
+  needs: []
+  dependencies: []
+  script:
+    - poetry install -v --sync --only main
+    - poetry build
+  artifacts:
+    paths:
+      - dist/*
 
 ###############################################################################
 # TEST
@@ -155,6 +139,7 @@ pytest:
       junit: ./*.xml.junit
   parallel:
     matrix:
+      # Poetry 1.1.13 was last support for py36
       # - IMAGE: python:3.6
       #   TOXENV: py36
       - IMAGE: python:3.7
@@ -189,7 +174,7 @@ coverage:
 # gitlab_artifact_report:
 #   stage: test
 #   needs:
-#     - job: sdist
+#     - job: build
 #       artifacts: true
 #   before_script:
 #     - python3 -m pip install --user virtualenv
@@ -216,16 +201,14 @@ pypi_publish:
   needs:
     - job: pylint
       artifacts: false
-    # - job: sdist
-    #   artifacts: false
+    - job: build
+      artifacts: false
     - job: pytest
       artifacts: false
   script:
     - poetry install -v --sync
-    - source $(poetry env info --path)/bin/activate
-    # FIXME: Replace with `poetry publish` command.
-    - python setup.py sdist bdist_wheel
-    - python -m twine upload dist/* -u __token__ -p $PYPI_API_TOKEN
+    - poetry build
+    - poetry publish -u __token__ -p "${PYPI_API_TOKEN}"
   artifacts:
     paths:
       - dist/*

@@ -1,7 +1,7 @@
 = `cppcheck-codequality` Changelog
 :toc:
 
-== Upcoming
+== v1.3.0 - 2022-10-19
 
 * Fix Gitlab CI syntax to use new `reports:coverage_report` key.
 * Fix issue count return from `convert_file`. [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/8[#8]]
