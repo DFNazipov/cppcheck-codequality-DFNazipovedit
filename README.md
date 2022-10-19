@@ -1,17 +1,20 @@
 # cppcheck-codequality
 
 [![badge-pypi](https://img.shields.io/pypi/v/cppcheck-codequality.svg?logo=pypi)](https://pypi.python.org/pypi/cppcheck-codequality/)
+&nbsp;
+[![badge-pypi-downloads](https://img.shields.io/pypi/dm/cppcheck-codequality)](https://pypi.org/project/cppcheck-codequality/)
 
 
-[![badge-pipeline](https://gitlab.com/ahogen/cppcheck-codequality/badges/master/pipeline.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+[![badge-pipeline](https://gitlab.com/ahogen/cppcheck-codequality/badges/main/pipeline.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
 &nbsp;
-[![badge-coverage](https://gitlab.com/ahogen/cppcheck-codequality/badges/master/coverage.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+[![badge-coverage](https://gitlab.com/ahogen/cppcheck-codequality/badges/main/coverage.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
 &nbsp;
-[![badge-pylint](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/master/raw/badge.svg?job=lint_python)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+[![badge-pylint](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/main/raw/badge.svg?job=pylint)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
 &nbsp;
-[![badge-formatting](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/master/raw/badge.svg?job=format_black)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
+[![badge-formatting](https://gitlab.com/ahogen/cppcheck-codequality/-/jobs/artifacts/main/raw/badge.svg?job=format_black)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
 &nbsp;
 [![badge-issues-cnt](https://img.shields.io/badge/dynamic/json?label=issues&query=statistics.counts.opened&url=https%3A%2F%2Fgitlab.com%2Fapi%2Fv4%2Fprojects%2F19114200%2Fissues_statistics%3Fscope%3Dall)](https://gitlab.com/ahogen/cppcheck-codequality/-/issues)
+
 
 ## About
 
@@ -23,16 +26,10 @@ That's all this does: convert CppCheck XML to Code Climate JSON.
 
 ### Usage
 
-Install with PIP (note the _underscore_ here):
-
-```bash
-python3 -m pip install -U cppcheck_codequality
-```
-
 It is primarily used as a console script. As such, ensure you have Python 3's "scripts" directory in your `PATH` variable.
 For example, on Linux, that might be `$HOME/.local/bin`.
 
-To test, try the `--help` or `--version` flags (note the _dash_ here, instead of underscore):
+To test, try the `--help` or `--version` flags:
 ```bash
 cppcheck-codequality --help
 ```
@@ -40,16 +37,18 @@ cppcheck-codequality --help
 CppCheck already has a script to convert its XML report to HTML for easy
 human reading. See "Chapter 11 HTML Report" in the [CppCheck Manual](http://cppcheck.sourceforge.net/manual.pdf)
 
-This script follows that example and provides similar command-line options. So
-usage is as follows:
+This script follows that example and provides similar command-line options.
+A typical workflow might look like this:
 
 ```bash
 # Generate CppCheck report as XML
 cppcheck --xml --enable=warning,style,performance ./my_src_dir/ 2> cppcheck_out.xml
 # Convert to a Code Climate JSON report
-cppcheck-codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json
+cppcheck-codequality --input-file cppcheck_out.xml --output-file cppcheck.json
 ```
-OR, you could invoke the script directly, as a module, like this:
+
+If you wanted, you could invoke the script directly as a module, like this:
+
 ```bash
 # Run as a module instead (note the underscore in the module name here)
 python -m cppcheck_codequality --input-file=cppcheck_out.xml --output-file=cppcheck.json

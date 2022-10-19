@@ -1,24 +1,31 @@
-import os
-import sys
+# -*- coding: utf-8 -*-
 import json
 import logging
+import os
+import sys
 
 import pytest
+
+import cppcheck_codequality as uut
 
 # PYTEST PLUGINS
 # - pytest-console-scripts
 # - pytest-cov
 
-import cppcheck_codequality as uut
 
 pytest_plugins = "console-scripts"
 
 CPPCHECK_XML_ERRORS_START = r"""<?xml version="1.0" encoding="UTF-8"?><results version="2"><cppcheck version="1.90"/><errors>"""
 CPPCHECK_XML_ERRORS_END = r"""</errors></results>"""
 
+log = logging.getLogger(__name__)
+
 
 @pytest.mark.script_launch_mode("subprocess")
 def test_cli_opts(script_runner):
+
+    import_loc = uut.__file__
+    log.info("Imported %s", import_loc)
 
     ret = script_runner.run(
         os.path.abspath(sys.executable), "-m", "cppcheck_codequality", "-h"

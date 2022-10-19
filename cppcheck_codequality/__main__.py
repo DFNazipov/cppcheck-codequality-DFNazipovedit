@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 
-import sys
-import logging
 import argparse
+import logging
+import sys
 
-from . import convert_file
-from . import __version__
+from . import __version__, convert_file
 
 
 def _init_logging(level, fname):

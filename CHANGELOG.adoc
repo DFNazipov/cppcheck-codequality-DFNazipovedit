@@ -4,8 +4,11 @@
 == Upcoming
 
 * Fix Gitlab CI syntax to use new `reports:coverage_report` key.
-* Remove line number from fingerprint input. [#7]
-* Fix issue count return from `convert_file`. [#8]
+* Fix issue count return from `convert_file`. [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/8[#8]]
+* Remove line number from fingerprint input. [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/7[#7]]
+* Transition from setup.py + requirements text files to Poetry v1.2.x.
+* Remove Python 3.6.x support.
+* Test for Python 3.10.x and 3.11.x support.
 
 == v1.2.0 - 2021-10-19
 

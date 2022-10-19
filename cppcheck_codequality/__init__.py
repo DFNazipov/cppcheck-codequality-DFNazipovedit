@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 """Convert CppCheck XML to Code Quality JSON
 
@@ -20,20 +21,17 @@ References:
 SPDX-License-Identifier: MIT
 """
 
-import os
-import math
-import logging
-import typing
-
-from copy import deepcopy
-import json
 import hashlib
+import json
+import logging
+import os
+import typing
+from copy import deepcopy
 
 # third-party
 import xmltodict
 
-# __version__ is generated after running setup.py, when packaging
-from .version import VERSION as __version__
+__version__ = "0.0.0"
 
 log = logging.getLogger(__name__)
 
