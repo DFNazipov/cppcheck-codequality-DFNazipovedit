@@ -58,6 +58,7 @@ pylint:
     # Setup dev env
     - poetry install -v --sync --only main,ci,dev,test
     - source $(poetry env info --path)/bin/activate
+    - pip install 'pylint-gitlab>=1.1.0'
 
     - anybadge -l pylint -v 'fail' -c '#e05d44' -o -f badge.svg
     - python_files=$(git ls-files '*.py' | tr '\n' ' ')
@@ -107,9 +108,11 @@ build:
   script:
     - poetry install -v --sync --only main
     - poetry build
+    - poetry export --with dev,test > dev-requirements.txt
   artifacts:
     paths:
       - dist/*
+      - dev-requirements.txt
 
 ###############################################################################
 # TEST
@@ -130,7 +133,6 @@ pytest:
     when: always
     paths:
       - ./.coverage.*
-      - cppcheck_codequality/version.py
       - pytest_out*
       - coverage.xml
       - metrics.txt
@@ -139,9 +141,6 @@ pytest:
       junit: ./*.xml.junit
   parallel:
     matrix:
-      # Poetry 1.1.13 was last support for py36
-      # - IMAGE: python:3.6
-      #   TOXENV: py36
       - IMAGE: python:3.7
         TOXENV: py37
       - IMAGE: python:3.8
@@ -153,10 +152,49 @@ pytest:
       - IMAGE: python:3.11-rc
         TOXENV: py311
 
+# We're using Poetry 1.2.x because it is starting to add support for plugins,
+# like using the version number of a git tag in the pyproject.tml file.
+# However Python 3.6 support was removed after Poetry 1.1.13.
+# So this job does things a 'manually', using virtual environments, pip, and a
+# requirements.txt generated from an earlier job, to accomplish the same thing
+# as the above pytest jobs.
+pytest-36:
+  stage: test
+  image: python:3.6.8
+  needs:
+    - job: build
+      artifacts: true
+  variables:
+    COVERAGE_FILE: .coverage.py36
+  before_script:
+    - python3 -m venv ./.venv
+    - source ./.venv/bin/activate
+    - python -m pip install --upgrade pip
+    - pip install -r ./dev-requirements.txt  --require-hashes
+    - pip install dist/cppcheck_codequality-*.whl
+  script:
+    - pytest
+        --cov=cppcheck_codequality
+        --cov=tests
+        --cov-report=term-missing
+        --cov-branch
+        -c pytest.ini
+        --log-file=./pytest_out_py36.log 
+        --junit-xml=./pytest_out_py36.xml.junit
+  artifacts:
+    when: always
+    paths:
+      - ./.coverage.*
+      - pytest_out*
+    reports:
+      junit: ./*.xml.junit
+
 coverage:
   stage: test
   needs:
     - job: pytest
+      artifacts: true
+    - job: pytest-36
       artifacts: true
   script:
     - poetry install -v --sync --only ci,multienv
