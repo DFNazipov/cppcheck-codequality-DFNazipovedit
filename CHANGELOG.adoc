@@ -1,6 +1,10 @@
 = `cppcheck-codequality` Changelog
 :toc:
 
+== v1.3.1 - 2022-10-19
+
+* Restore support for Python 3.6. [https://gitlab.com/ahogen/cppcheck-codequality/-/issues/9[#9]]
+
 == v1.3.0 - 2022-10-19
 
 * Fix Gitlab CI syntax to use new `reports:coverage_report` key.
