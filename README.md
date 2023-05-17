@@ -2,7 +2,7 @@
 
 [![badge-pypi](https://img.shields.io/pypi/v/cppcheck-codequality.svg?logo=pypi)](https://pypi.python.org/pypi/cppcheck-codequality/)
 &nbsp;
-[![badge-pypi-downloads](https://img.shields.io/pypi/dm/cppcheck-codequality)](https://pypi.org/project/cppcheck-codequality/)
+[![badge-pypi-downloads](https://img.shields.io/pypi/dm/cppcheck-codequality)](https://pypistats.org/packages/cppcheck-codequality)
 
 
 [![badge-pipeline](https://gitlab.com/ahogen/cppcheck-codequality/badges/main/pipeline.svg)](https://gitlab.com/ahogen/cppcheck-codequality/-/pipelines?scope=branches)
