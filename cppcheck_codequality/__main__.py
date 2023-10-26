@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+"""CLI app for converting CppCheck XML to code quality JSON.
+
+Copyright (c) 2020, Alexander Hogen
+SPDX-License-Identifier: MIT
+"""
 
 import argparse
 import logging
 import sys
+from typing import List
 
 from . import __version__, convert_file
 
 
 def _init_logging(level, fname):
-    """Setup root logger to log to console, when this is run as a script"""
+    """Setup root logger to log to console, when this is run as a script.
+
+    Args:
+        level:
+            Global logging level to set. See logging.Logger.setLevel().
+        fname:
+            Path of log file to append to, if not "/dev/null".
+    """
     logging.getLogger().setLevel(level)
 
     h_console = logging.StreamHandler()
@@ -31,8 +44,13 @@ def _init_logging(level, fname):
         logging.getLogger("").addHandler(h_file)
 
 
-def _get_args() -> argparse.Namespace:
-    """Parse CLI args with argparse"""
+def _get_args(argv) -> argparse.Namespace:
+    """Parse CLI args with argparse
+
+    Args:
+        argv
+            List of CLI argument strings to parse.
+    """
     # Make parser object
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -95,25 +113,36 @@ def _get_args() -> argparse.Namespace:
         help="print version and exit",
     )
 
-    return parser.parse_args()
+    return parser.parse_args(args=argv)
 
 
-def main() -> int:
-    """Convert a CppCheck XML file to Code Climate JSON file, at the command line."""
+def main(argv: List[str] = sys.argv[1:]) -> int:
+    """Convert a CppCheck XML file to Code Climate JSON file, at the command line.
+
+    Args:
+        argv:
+            Command line arguments to parse, such as `["--version"]`. Defaults
+            to system argv.
+
+    Returns:
+        0 if successful.
+    """
 
     if sys.version_info < (3, 6, 0):
         sys.stderr.write("You need python 3.6 or later to run this script\n")
         return 1
 
-    args = _get_args()
+    args = _get_args(argv)
 
+    # Initialize logging for CLI.
     _init_logging(level=args.loglevel.upper(), fname=args.logfile)
-    m_log = logging.getLogger(__name__)
+    m_log = logging.getLogger("cppcheck_codequality")
 
     if args.print_version:
         print(__version__)
         return 0
 
+    # Convert the XML to JSON here.
     ret = convert_file(
         fname_in=args.input_file, fname_out=args.output_file, base_dirs=args.base_dir
     )

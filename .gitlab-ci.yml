@@ -9,7 +9,7 @@
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  POETRY_VERSION: "1.2.1"
+  POETRY_VERSION: "1.5.1"
   POETRY_HOME: "$CI_PROJECT_DIR/.poetry"
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pypoetry"
 
@@ -38,7 +38,7 @@ default:
           poetry --version;
       fi
     # Install Poetry plugins
-    - poetry self add "poetry-dynamic-versioning[plugin]==0.20.0"
+    - poetry self add "poetry-dynamic-versioning[plugin]==1.1.0"
 
 stages:
   - lint
@@ -106,13 +106,12 @@ build:
   needs: []
   dependencies: []
   script:
-    - poetry install -v --sync --only main
+    - poetry install -vv --sync --only main
+    - poetry env info
     - poetry build
-    - poetry export --with dev,test > dev-requirements.txt
   artifacts:
     paths:
       - dist/*
-      - dev-requirements.txt
 
 ###############################################################################
 # TEST
@@ -124,16 +123,20 @@ pytest:
   needs: []
   dependencies: []
   script:
-    - poetry install -v --sync --only ci,multienv
-    - poetry run tox -e ${TOXENV} | tee pytest_session.out
+    - poetry env info
+    #- poetry install -v --only ci,multienv
+    #- poetry run tox -e ${TOXENV} | tee pytest_session.out
+    - pip install tox
+    - tox -e ${TOXENV} | tee pytest_session.out
 
     - coverage=$(grep -oP 'TOTAL.*\s+\K(\d+\.\d+)%' ./pytest_session.out)
     - echo "coverage{env=\"${TOXENV}\"} ${coverage}" > metrics.txt
   artifacts:
     when: always
     paths:
+      - .tox/**/*.log
       - ./.coverage.*
-      - pytest_out*
+      - ./pytest_out*
       - coverage.xml
       - metrics.txt
     reports:
@@ -149,52 +152,15 @@ pytest:
         TOXENV: py39
       - IMAGE: python:3.10
         TOXENV: py310
-      - IMAGE: python:3.11-rc
+      - IMAGE: python:3.11
         TOXENV: py311
-
-# We're using Poetry 1.2.x because it is starting to add support for plugins,
-# like using the version number of a git tag in the pyproject.tml file.
-# However Python 3.6 support was removed after Poetry 1.1.13.
-# So this job does things a 'manually', using virtual environments, pip, and a
-# requirements.txt generated from an earlier job, to accomplish the same thing
-# as the above pytest jobs.
-pytest-36:
-  stage: test
-  image: python:3.6.8
-  needs:
-    - job: build
-      artifacts: true
-  variables:
-    COVERAGE_FILE: .coverage.py36
-  before_script:
-    - python3 -m venv ./.venv
-    - source ./.venv/bin/activate
-    - python -m pip install --upgrade pip
-    - pip install -r ./dev-requirements.txt  --require-hashes
-    - pip install dist/cppcheck_codequality-*.whl
-  script:
-    - pytest
-        --cov=cppcheck_codequality
-        --cov=tests
-        --cov-report=term-missing
-        --cov-branch
-        -c pytest.ini
-        --log-file=./pytest_out_py36.log 
-        --junit-xml=./pytest_out_py36.xml.junit
-  artifacts:
-    when: always
-    paths:
-      - ./.coverage.*
-      - pytest_out*
-    reports:
-      junit: ./*.xml.junit
+      - IMAGE: python:3.12
+        TOXENV: py312
 
 coverage:
   stage: test
   needs:
     - job: pytest
-      artifacts: true
-    - job: pytest-36
       artifacts: true
   script:
     - poetry install -v --sync --only ci,multienv
