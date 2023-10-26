@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-"""Convert CppCheck XML to Code Quality JSON
+"""Convert CppCheck XML to Code Quality JSON.
 
 CppCheck is a useful tool to lint C/C++ code, checking for errors and code smells.
 Developer tools, such as GitLab, can display useful insights about code quality,
@@ -18,6 +18,7 @@ References:
   - http://cppcheck.sourceforge.net
   - https://docs.gitlab.com/ee/user/project/merge_requests/code_quality.html#implementing-a-custom-tool
 
+Copyright (c) 2020, Alexander Hogen
 SPDX-License-Identifier: MIT
 """
 
@@ -48,7 +49,7 @@ CODE_QUAL_ELEMENT = {
 
 
 def _get_codeclimate_category(cppcheck_severity: str) -> str:
-    """Get Code Climate category, from CppCheck severity string
+    """Get Code Climate category, from CppCheck severity string.
 
     CppCheck: error, warning, style, performance, portability, information
     CodeQuality: Bug Risk, Clarity, Compatibility, Complexity, Duplication,
@@ -66,7 +67,7 @@ def _get_codeclimate_category(cppcheck_severity: str) -> str:
 
 
 def _get_codeclimate_severity(cppcheck_severity: str) -> str:
-    """Get Code Climate severity, from CppCheck severity string
+    """Get Code Climate severity, from CppCheck severity string.
 
     CodeQuality: info, minor, major, critical, blocker
     """
@@ -84,19 +85,20 @@ def _get_codeclimate_severity(cppcheck_severity: str) -> str:
 def convert_file(
     fname_in: str, fname_out: str, base_dirs: typing.Optional[list] = None
 ) -> int:
-    """Convert CppCheck XML file to GitLab-compatible "Code Quality" JSON report
+    """Convert CppCheck XML file to GitLab-compatible "Code Quality" JSON report.
 
     Args:
-        fname_in (str):
-          Input file path (CppCheck XML). Like 'cppcheck.xml'.
-        fname_out (str):
-          Output file path (code quality JSON). Like 'cppcheck.json'.
-        base_dir (str):
-          Base directory where source files with relative paths can be found.
+        fname_in:
+            Input file path (CppCheck XML). Like 'cppcheck.xml'.
+        fname_out:
+            Output file path (code quality JSON). Like 'cppcheck.json'.
+        base_dirs:
+            List of base directories where source files with relative paths can
+            be found.
 
     Returns:
-        int: If processing failed, a negative value. If successful, number of
-          CppCheck issues processed.
+        If processing failed, a negative value. If successful, number of
+        CppCheck issues processed.
     """
     fin = None
     json_out_str = ""
@@ -114,7 +116,7 @@ def convert_file(
     log.debug("Reading input file: %s", fname_in)
     with open(fname_in, mode="rt", encoding="utf-8", errors="backslashreplace") as fin:
         json_out_str, num_cq_issues_converted = _convert(
-            fin.read(), base_dirs=base_dirs
+            xml_input=fin.read(), base_dirs=base_dirs
         )
 
     log.debug("Writing output file: %s", fname_out)
@@ -130,7 +132,7 @@ def _get_line_from_file(
     """Return a specific line in a file as a string.
 
     I've found that linecache.getline() will end up raising a UnicodeDecodeError
-    if the source file we're opening has non-UTF-8 characters in it. So, here,
+    if the source file we're opening has non-UTF-8 characters in it. Here,
     we're explicitly escaping those bad characters.
 
     Side note, it seems CppCheck v2.0+ will generate a 'syntaxError' for
@@ -138,10 +140,10 @@ def _get_line_from_file(
     more easily.
 
     Args:
-        filename (str):
-          Name of file to open and read line from
-        line_number (int):
-          Number of the line to extract. Line number starts at 1.
+        filename:
+            Name of file to open and read line from.
+        line_number:
+            Number of the line to extract. Line number starts at 1.
 
     Returns:
         str: Contents of the specified line.
@@ -160,9 +162,8 @@ def _get_line_from_file(
     filename = os.path.abspath(filename)
     if not os.path.isfile(filename):
         raise FileNotFoundError(
-            "Source code file does not exist or cannot be opened. Missing a base directory?\n--> '{}'".format(
-                filename
-            )
+            "Source code file does not exist or cannot be opened. "
+            "Missing a base directory?\n--> '{}'".format(filename)
         )
 
     with open(filename, mode="rt", encoding="utf-8", errors="backslashreplace") as fin:
@@ -178,11 +179,11 @@ def _get_line_from_file(
         line_number,
         filename,
     )
-    return "Can't read line {} from a {} line file".format(line_number, max_line_cnt)
+    return "Can not read line {} from a {} line file".format(line_number, max_line_cnt)
 
 
 def _convert(
-    xml_input, base_dirs: typing.Optional[typing.List[str]] = None
+    xml_input: str, base_dirs: typing.Optional[typing.List[str]] = None
 ) -> typing.Tuple[str, int]:
     """Convert CppCheck XML to Code Climate JSON
 
@@ -195,8 +196,11 @@ def _convert(
         or check name.
 
     Args:
-        fname_in (str): Filename of the XML from CppCheck
-        fname_out (str): Filename to write the JSON output
+        xml_input:
+            Filename of the XML from CppCheck
+        base_dirs:
+            List of base directories where source files with relative paths can
+            be found.
 
     Returns:
         Tuple, where the first element, a string, is the JSON conversion result
@@ -225,10 +229,7 @@ def _convert(
             [dict_in["results"]["errors"]["error"]]
         )
 
-    # log.debug("Got the following dict:\n%s\n", str(dict_in))
-    # log.debug("Type is {}\n".format(str(type(dict_in["results"]["errors"]))))
-    # log.debug("Type is {}\n".format(str(type(dict_in["results"]["errors"]["error"]))))
-
+    # The "errors" XML tag holds all the code quality issues found.
     for error in dict_in["results"]["errors"]["error"]:
 
         log.debug("Processing -- %s", str(error))
@@ -327,7 +328,7 @@ def _convert(
             (fingerprint_str).encode("utf-8")
         ).hexdigest()
 
-        # Append this record
+        # Append this record.
         dict_out.append(deepcopy(tmp_dict))
 
     if len(dict_out) == 0:
@@ -338,6 +339,7 @@ def _convert(
 if __name__ == "__main__":
     import warnings
 
+    # Warn if this file executed directly. mostly just to catch packaging errors.
     warnings.warn(
         "use 'python3 -m cppcheck_codequality', not 'python3 -m cppcheck_codequality.__init__'",
         DeprecationWarning,

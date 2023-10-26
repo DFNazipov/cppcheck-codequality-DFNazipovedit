@@ -9,11 +9,8 @@ import pytest
 import cppcheck_codequality as uut
 
 # PYTEST PLUGINS
-# - pytest-console-scripts
 # - pytest-cov
 
-
-pytest_plugins = "console-scripts"
 
 CPPCHECK_XML_ERRORS_START = r"""<?xml version="1.0" encoding="UTF-8"?><results version="2"><cppcheck version="1.90"/><errors>"""
 CPPCHECK_XML_ERRORS_END = r"""</errors></results>"""
@@ -21,57 +18,53 @@ CPPCHECK_XML_ERRORS_END = r"""</errors></results>"""
 log = logging.getLogger(__name__)
 
 
-@pytest.mark.script_launch_mode("subprocess")
-def test_cli_opts(script_runner):
+def test_cli_opts():
+    from cppcheck_codequality import __main__ as uut_main
 
     import_loc = uut.__file__
     log.info("Imported %s", import_loc)
 
-    ret = script_runner.run(
-        os.path.abspath(sys.executable), "-m", "cppcheck_codequality", "-h"
+    with pytest.raises(SystemExit) as exc_info:
+        uut_main.main(["-m", "cppcheck_codequality", "-h"])
+    assert 0 == exc_info.value.args[0]
+
+    with pytest.raises(SystemExit) as exc_info:
+        uut_main.main(["-h"])
+    assert 0 == exc_info.value.args[0]
+
+    with pytest.raises(SystemExit) as exc_info:
+        uut_main.main(["-i"])
+    assert 0 != exc_info.value.args[0]
+
+    assert 0 == uut_main.main(["--input-file", "./tests/cppcheck_simple.xml"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        uut_main.main(["-i", "./tests/cppcheck_simple.xml", "-o"])
+    assert 0 != exc_info.value.args[0]
+
+    assert 0 == uut_main.main(
+        [
+            "-i",
+            "./tests/cppcheck_simple.xml",
+            "-o",
+            "cppcheck.json",
+        ]
     )
-    assert ret.success
 
-    ret = script_runner.run("cppcheck-codequality", "-h")
-    assert ret.success
-
-    ret = script_runner.run("cppcheck-codequality", "-i")
-    assert not ret.success
-
-    ret = script_runner.run(
-        "cppcheck-codequality", "--input-file", "./tests/cppcheck_simple.xml"
+    assert 0 == uut_main.main(
+        [
+            "-i",
+            "./tests/cppcheck_simple_needs_base_dir.xml",
+            "-o",
+            "cppcheck.json",
+            "-b",
+            "./",
+            "-b",
+            "./tests",
+        ]
     )
-    assert ret.success
 
-    ret = script_runner.run(
-        "cppcheck-codequality", "-i", "./tests/cppcheck_simple.xml", "-o"
-    )
-    assert not ret.success
-
-    ret = script_runner.run(
-        "cppcheck-codequality",
-        "-i",
-        "./tests/cppcheck_simple.xml",
-        "-o",
-        "cppcheck.json",
-    )
-    assert ret.success
-
-    ret = script_runner.run(
-        "cppcheck-codequality",
-        "-i",
-        "./tests/cppcheck_simple_needs_base_dir.xml",
-        "-o",
-        "cppcheck.json",
-        "-b",
-        "./",
-        "-b",
-        "./tests",
-    )
-    assert ret.success
-
-    ret = script_runner.run("cppcheck-codequality", "--version")
-    assert ret.success
+    assert 0 == uut_main.main(["--version"])
 
 
 def test_run_as_module():
