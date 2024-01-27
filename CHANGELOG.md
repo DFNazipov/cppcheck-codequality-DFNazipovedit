@@ -2,7 +2,12 @@
 
 [[_TOC_]]
 
-## _Unreleased_
+## 1.4.1 - 2024-01-27
+
+### Fixed
+
+- Fix changelog links on PyPi et. al.
+- Fix supported Python version range in pyproject.toml
 
 ## 1.4.0 - 2023-10-26
 
