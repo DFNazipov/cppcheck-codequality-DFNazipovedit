@@ -2,6 +2,12 @@
 
 [[_TOC_]]
 
+## UPCOMING
+
+### Fixed
+
+- CI job tag (`docker` -> `gitlab-org-docker`). (MR !20)
+
 ## 1.4.1 - 2024-01-27
 
 ### Fixed

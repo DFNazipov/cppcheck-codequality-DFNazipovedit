@@ -15,7 +15,7 @@ variables:
 
 default:
   tags:
-    - docker
+    - gitlab-org-docker
   image: python:3.7
   interruptible: true
   cache:
