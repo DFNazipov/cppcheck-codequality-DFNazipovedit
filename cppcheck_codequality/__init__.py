@@ -232,7 +232,6 @@ def _convert(
 
     # The "errors" XML tag holds all the code quality issues found.
     for error in dict_in["results"]["errors"]["error"]:
-
         log.debug("Processing -- %s", str(error))
 
         # Some information messages are not related to the code.
@@ -332,7 +331,6 @@ def _convert(
             ).hexdigest()
         else:
             tmp_dict["fingerprint"] = hashlib.md5(fingerprint_bytes).hexdigest()
-
 
         # Append this record.
         dict_out.append(deepcopy(tmp_dict))

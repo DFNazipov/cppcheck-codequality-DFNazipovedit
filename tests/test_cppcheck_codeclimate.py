@@ -292,7 +292,6 @@ def test_source_line_extractor_file0(caplog):
 
 
 def test_convert_file(caplog):
-
     with pytest.raises(FileNotFoundError, match=r".* Missing a base directory.*"):
         uut.convert_file("tests/cppcheck_simple_needs_base_dir.xml", "cppcheck.json")
 
