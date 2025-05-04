@@ -4,9 +4,12 @@
 
 ## UPCOMING
 
+## 1.4.2 - 2025-03-03
+
 ### Fixed
 
 - CI job tag (`docker` -> `gitlab-org-docker`). (MR !20)
+- Fix MD5 hash exception in FIPS restricted environments. (MR !21, ty @irowebbn)
 
 ## 1.4.1 - 2024-01-27
 
