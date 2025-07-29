@@ -309,6 +309,7 @@ def _convert(
             tmp_dict["description"] = "{} (CWE-{})".format(
                 tmp_dict["description"], cwe_id
             )
+        tmp_dict["cwe"] = cwe_id
 
         # GitLab requires the fingerprint field. Code Climate describes this as
         # being used to uniquely identify the issue, so users could "exclude it
