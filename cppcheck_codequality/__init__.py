@@ -43,6 +43,7 @@ CODE_QUAL_ELEMENT = {
     "severity": "--GITLAB-REQUIREMENT--",
     "check_name": "--CODE-CLIMATE-REQUIREMENT--",
     "description": "--CODE-CLIMATE-REQUIREMENT--",
+    "cwe": "@cwe",
     "categories": "--CODE-CLIMATE-REQUIREMENT--",
     "fingerprint": "--GITLAB-REQUIREMENT--",
     "location": {"path": "", "positions": {"begin": {"line": -1, "column": -1}}},
